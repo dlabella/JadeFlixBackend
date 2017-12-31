@@ -12,6 +12,7 @@ namespace JadeFlix.Api
         {
             
         }
+        public override bool IsCacheable => false;
         public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             Trace.WriteLine("Processing GetRequest");

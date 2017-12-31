@@ -11,13 +11,13 @@ using System.Collections.Generic;
 
 namespace JadeFlix.Api
 {
-    public class GetActiveDownloads : ApiRequestResponse
+    public class GetDownloads : ApiRequestResponse
     {
-        public GetActiveDownloads() : base("api/getActiveDownloads"){}
+        public GetDownloads() : base("api/getDownloads"){}
 
         public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
         {
-            var downloads = AppContext.FileDownloader.GetActiveDownloads();
+            var downloads = AppContext.FileDownloader.GetDownloads();
 
             return JsonConvert.SerializeObject(downloads);
         }

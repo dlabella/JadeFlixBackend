@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using WebDownloader.Domain;
+using WebDownloader.Domain.EventHandlers;
 using WebDownloader.Downloaders;
-
+using Common;
+//Reviewed: pending config for max parellel downloads
 namespace JadeFlix.Services
 {
     public class DownloadManager
@@ -14,50 +16,76 @@ namespace JadeFlix.Services
         private Queue<DownloadInfo> _queue = new Queue<DownloadInfo>();
 
         private static ConcurrentDictionary<string, DownloadInfo> _activeDownloads = new ConcurrentDictionary<string, DownloadInfo>();
-        private static ConcurrentDictionary<string, DownloadInfo> _completedDownloads = new ConcurrentDictionary<string, DownloadInfo>();
-
+       
         private const int MaxParallelDownloads = 2;
 
         CurlDownloader _downloader;
+
         public DownloadManager()
         {
-            
             _downloader = new CurlDownloader();
         }
-        public void Enqueue(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool forceDownload = false, bool removeOnCompletion = true)
+
+        public void Enqueue(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool forceDownload = false, bool disableTracking = false)
         {
-            var di = new DownloadInfo(id, filePath, url, true, removeOnCompletion);
+            var di = BuildDownloadInfo(id, filePath, url, cookieContainer, true, disableTracking);
+            if (EnqueueDownload(di, forceDownload))
+            {
+                ProcessQueue();
+            }
+            else
+            {
+                Logger.Debug("The url:" + url + " is already in queue or downloading...");
+            }
+        }
+
+        private DownloadInfo BuildDownloadInfo(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool isQueued = true, bool disableTracking = false)
+        {
+            var di = new DownloadInfo(id, filePath, url, isQueued, disableTracking);
 
             if (cookieContainer != null)
             {
                 di.Cookies = cookieContainer.GetCookies(url);
             }
-            if (!_activeDownloads.ContainsKey(id)|| forceDownload)
-            {   
-                _activeDownloads.AddOrUpdate(id, di, (o, n) => di);
+            return di;
+        }
+
+        private bool EnqueueDownload(DownloadInfo di, bool forceDownload)
+        {
+            if (!_activeDownloads.ContainsKey(di.Id) || forceDownload)
+            {
+                _activeDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
 
                 _queue.Enqueue(di);
-
-                if (_activeDownloads.Count < MaxParallelDownloads)
-                {
-                    ProcessQueue();
-                }
+                return true;
             }
-            else
-            {
-                Logger.Debug("The url:" + url + " is already downloading...");
-            }
+            return false;
         }
+
+        public DownloadInfo DequeueDownload()
+        {
+            if (_queue.Count > 0)
+            {
+                var item = _queue.Dequeue();
+                item.IsQueued = false;
+                return item;
+            }
+            return null;
+        }
+
         public void ProcessQueue()
         {
-            if (_queue.Count == 0) return;
-            try
+            if (!CanProcessNextQueueItem())
             {
+                return;
+            }
+            try
+            {                
                 Logger.Debug("Dequeuing download item ...");
-                var item = _queue.Dequeue();
                 ThreadPool.QueueUserWorkItem((state) =>
                 {
-                    Download(item.Id, item.File, item.Source, item.Cookies);
+                    var item = DequeueDownload();
+                    ProcessDownload(item);
                 });
             }
             catch (Exception ex)
@@ -65,64 +93,62 @@ namespace JadeFlix.Services
                 Logger.Debug("Download Exception: " + ex.Message);
             }
         }
-        public IEnumerable<DownloadInfo> GetActiveDownloads()
+        private bool CanProcessNextQueueItem()
+        {
+            if (_queue.Count == 0) return false;
+            if (_activeDownloads.Count > MaxParallelDownloads) return false;
+            return true;
+        }
+        public IEnumerable<DownloadInfo> GetDownloads()
         {
             var active = new List<DownloadInfo>(_activeDownloads.Values);
-            active.AddRange(_completedDownloads.Values);
+            active.AddRange(_queue);
             return active;
         }
-        private void Download(string id, string filePath, Uri url, CookieCollection cookieContainer)
+        private void ProcessDownload(DownloadInfo di)
         {
-            var cookies = new Dictionary<string, string>();
-            if (cookieContainer != null)
-            {
-                foreach (Cookie cookie in cookieContainer)
-                {
-                    cookies.Add(cookie.Name, cookie.Value);
-                }
-            }
+            _activeDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
 
-            var safePath = Common.String.CleanPath(filePath);
-
-            _activeDownloads.AddOrUpdate(id, new DownloadInfo(filePath, url, false), (o, n) => new DownloadInfo(filePath, url, false));
-
-            _downloader.Download(id, safePath, url, cookies,
-               (s, x) =>
-               {
-                   _activeDownloads.AddOrUpdate(x.Info.Id, x.Info, (o, n) => x.Info);
-
-                   if (x.Info.BytesReceived > 0 && x.Info.BytesTotal > 0)
-                   {
-                       Logger.Debug(((x.Info.BytesReceived / x.Info.BytesTotal) * 100) + " - " + x.Info.File);
-                   }
-                   else
-                   {
-                       Logger.Debug("??% - " + x.Info.File);
-                   }
-               },
-               (s, x) =>
-               {
-                   _activeDownloads.TryRemove(x.Info.Id, out DownloadInfo val);
-
-                   x.Info.BytesReceived = x.Info.BytesTotal;
-                   if (!x.Info.RemoveOnCompletion)
-                   {
-                       _completedDownloads.AddOrUpdate(x.Info.Id, val, (o, n) => x.Info);
-                   }
-                   Logger.Debug("Download of " + x.Info.File + " is completed");
-
-                   ProcessQueue();
-               }
+            _downloader.Download(di.Id, di.File.CleanPath(), di.Source, GetCookieDictionary(di.Cookies), di.DisableTracking,
+               UpdateActiveDownload,
+               ActiveDownloadCompleted
             );
         }
-        public void RemoveCompletedDownload(Uri url)
+
+        private Dictionary<string,string> GetCookieDictionary(CookieCollection cookies)
         {
-            RemoveCompletedDownload(url.ToString());
+            var cookieDictionary = new Dictionary<string, string>();
+            if (cookies != null)
+            {
+                foreach (Cookie cookie in cookies)
+                {
+                    cookieDictionary.Add(cookie.Name, cookie.Value);
+                }
+            }
+            return cookieDictionary;
         }
-        public void RemoveCompletedDownload(string id)
+
+        private void ActiveDownloadCompleted(object sender, DownloadCompletedEventArgs e)
         {
-            _completedDownloads.TryRemove(id, out DownloadInfo download);
-            download = null;
+            _activeDownloads.TryRemove(e.Info.Id, out DownloadInfo val);
+
+            ProcessQueue();
+
+            Logger.Debug("Download of " + e.Info.File + " is completed");
+        }
+
+        private void UpdateActiveDownload(object sender, DownloadChangedEventArgs e)
+        {
+            _activeDownloads.AddOrUpdate(e.Info.Id, e.Info, (o, n) => e.Info);
+
+            if (e.Info.BytesReceived > 0 && e.Info.BytesTotal > 0)
+            {
+                Logger.Debug(((e.Info.BytesReceived / e.Info.BytesTotal) * 100) + " - " + e.Info.File);
+            }
+            else
+            {
+                Logger.Debug("??% - " + e.Info.File);
+            }
         }
     }
     internal class DownloadItem

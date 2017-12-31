@@ -14,7 +14,7 @@ namespace JadeFlix.Services.Scrapers
     public class LocalScraper
     {
         //"(\\[.*\\])|(\".*\")|('.*')|(\\(.*\\))";
-        private Regex regexBrackets=new Regex("(\\[.*\\])|(\\(.*\\))");
+        private Regex regexBrackets = new Regex("(\\[.*\\])|(\\(.*\\))");
         public LocalScraper()
         {
         }
@@ -110,13 +110,13 @@ namespace JadeFlix.Services.Scrapers
             var dir = new DirectoryInfo(path);
             if (!dir.Exists) return items;
 
-            foreach(var directory in dir.GetDirectories().OrderBy(x=>x.Name))
+            foreach (var directory in dir.GetDirectories().OrderBy(x => x.Name))
             {
                 ProcessFixes(directory);
 
                 Logger.Debug("Loading: " + directory.Name);
                 var item = Get(group, kind, directory.Name);
-                if (item != null && item.Media.Local.Count>0)
+                if (item != null && item.Media.Local.Count > 0)
                 {
                     items.Add(item);
                 }
@@ -151,7 +151,7 @@ namespace JadeFlix.Services.Scrapers
             var kind = Enum.Parse<EntryType>(kindName);
             var newItem = new CatalogItem()
             {
-                Group= group,
+                Group = group,
                 Name = name,
                 Kind = kind
             };
@@ -216,7 +216,7 @@ namespace JadeFlix.Services.Scrapers
             }
             else if (imageType == "poster")
             {
-                DownloadFileIfNotLocal(url, path);
+                DownloadFileIfNotLocal(url, path, true);
             }
 
             fileName = Common.String.CleanPath(name + "_" + imageType + ".jpg");
@@ -227,19 +227,19 @@ namespace JadeFlix.Services.Scrapers
             {
                 return AppContext.Config.WwwCachePath + "/" + group + "/" + kind + "/" + fileName.CleanDirectoryName();
             }
-            else 
+            else
             {
-                DownloadFileIfNotLocal(url, cache);
+                DownloadFileIfNotLocal(url, cache, true);
                 return url;
             }
         }
 
-        private void DownloadFileIfNotLocal(string url, string path)
+        private void DownloadFileIfNotLocal(string url, string path, bool diasbleTracking=false)
         {
             if (!url.Contains(AppContext.Config.WwwCachePath) &&
                     !url.Contains(AppContext.Config.WwwMediaPath))
             {
-                AppContext.FileDownloader.Enqueue(url, path, new Uri(url));
+                AppContext.FileDownloader.Enqueue(url, path, new Uri(url),disableTracking: diasbleTracking);
             }
         }
 
@@ -293,8 +293,8 @@ namespace JadeFlix.Services.Scrapers
                     });
                 }
             }
-            item.Media.Local=local.OrderByDescending(x=> ExtractNumberFromMediaFile(x.Name)).ToList();
-            
+            item.Media.Local = local.OrderByDescending(x => ExtractNumberFromMediaFile(x.Name)).ToList();
+
         }
 
         public bool IsInvalidFilename(string path, string fileName)
@@ -305,7 +305,7 @@ namespace JadeFlix.Services.Scrapers
                 fileIndex = path.Length;
                 fileIndex++;
             }
-            foreach(var invalidChar in Path.GetInvalidFileNameChars())
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
             {
                 if (fileName.Substring(fileIndex).Any(x => x == invalidChar))
                 {
@@ -332,12 +332,12 @@ namespace JadeFlix.Services.Scrapers
 
             if (!File.Exists(poster) && Uri.IsWellFormedUriString(item.Poster, UriKind.Absolute))
             {
-                AppContext.FileDownloader.Enqueue(item.Poster, poster, new Uri(item.Poster));
+                AppContext.FileDownloader.Enqueue(item.Poster, poster, new Uri(item.Poster), disableTracking: true);
             }
 
             if (!File.Exists(banner) && Uri.IsWellFormedUriString(item.Banner, UriKind.Absolute))
             {
-                AppContext.FileDownloader.Enqueue(item.Banner, banner, new Uri(item.Banner));
+                AppContext.FileDownloader.Enqueue(item.Banner, banner, new Uri(item.Banner), disableTracking: true);
             }
         }
 

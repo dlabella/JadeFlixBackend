@@ -28,7 +28,7 @@ namespace JadeFlix
                 server.RegisterRequestHandler(new Api.GetItem());
                 server.RegisterRequestHandler(new Api.GetMedia());
                 server.RegisterRequestHandler(new Api.GetMediaUrl());
-                server.RegisterRequestHandler(new Api.GetActiveDownloads());
+                server.RegisterRequestHandler(new Api.GetDownloads());
                 server.RegisterRequestHandler(new Api.GetLocal());
                 server.RegisterRequestHandler(new Api.FindItem());
                 server.RegisterRequestHandler(new Api.Download());

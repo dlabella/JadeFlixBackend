@@ -19,7 +19,7 @@ namespace JadeFlix.Api
     {
         public static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
         public BatchDownload() : base("api/batchDownload") { }
-
+        public override bool IsCacheable => false;
         public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var paramGroup = parameters.QueryParameters["group"];
@@ -39,7 +39,7 @@ namespace JadeFlix.Api
                 var threadKey = key;
                 var tvshow = scraper.GetTvShow(new Uri(url));
                 var path = Path.Combine(AppContext.Config.MediaPath, paramGroup, paramKind, tvshow.Name);
-                foreach (var item in tvshow.Media.Remote)
+                foreach (var item in tvshow.Media.Remote.OrderBy(x=>x.Name))
                 {
                     var local = AppContext.LocalScraper.Get(tvshow.GroupName, tvshow.KindName, tvshow.Name);
 
@@ -56,13 +56,13 @@ namespace JadeFlix.Api
                         var downloadUrl = scraper.GetMediaDownloadUrl(mediaUrl.Url);
                         Logger.Debug("Enqueuing download: " + fileName);
                         var file = Path.Combine(path, fileName);
-                        AppContext.FileDownloader.Enqueue(downloadUrl, file, new Uri(downloadUrl), Web.CookieContainer);
+                        AppContext.FileDownloader.Enqueue(item.UId, file, new Uri(downloadUrl), Web.CookieContainer);
                         Thread.Sleep(3500);
                     }
                 }
                 _itemsProcessing.TryRemove(threadKey, out string val);
             });
-            return key;
+            return "{\"result\":\"Ok\", \"key\":\"" + key.EncodeToBase64()+"\"}";
         }
     }
 }

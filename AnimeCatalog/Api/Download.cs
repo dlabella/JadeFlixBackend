@@ -12,7 +12,7 @@ namespace JadeFlix.Api
     public class Download : ApiRequestResponse
     {
         public Download() : base("api/download"){}
-
+        public override bool IsCacheable => false;
         public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var paramId = parameters.QueryParameters["id"];
