@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JadeFlix", "AnimeCatalog\JadeFlix.csproj", "{2678ED45-FA68-4471-9FC0-85E36FFA5056}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JadeFlix", "JadeFlix\JadeFlix.csproj", "{2678ED45-FA68-4471-9FC0-85E36FFA5056}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDownloader", "..\DownloadManager\WebDownloader.csproj", "{180A1563-C110-4B8B-A2A7-BB6B633D516D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDownloader", "WebDownloader\WebDownloader.csproj", "{180A1563-C110-4B8B-A2A7-BB6B633D516D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleWebApiServer", "..\SimpleWebApiServer\SimpleWebApiServer\SimpleWebApiServer.csproj", "{43FA6AAB-4B7A-43ED-B6CE-54A70F86366E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleWebApiServer", "SimpleWebApiServer\SimpleWebApiServer.csproj", "{43FA6AAB-4B7A-43ED-B6CE-54A70F86366E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebDownloader.UnitTests", "WebDownloader.UnitTests\WebDownloader.UnitTests.csproj", "{70A69930-63BF-4BC0-BC07-65CF87F726E3}"
 EndProject
