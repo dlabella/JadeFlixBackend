@@ -33,6 +33,8 @@ namespace Common
         {
             var invalidFileChars = Path.GetInvalidFileNameChars().ToList();
             invalidFileChars.Add('!');
+            invalidFileChars.Add('/');
+            invalidFileChars.Add('\\');
             //clean bad filename chars  
             foreach (char badChar in invalidFileChars)
             {

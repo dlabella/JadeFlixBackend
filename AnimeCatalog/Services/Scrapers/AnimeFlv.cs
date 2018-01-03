@@ -11,8 +11,7 @@ namespace JadeFlix.Services.Scrapers
     public class AnimeFlv : MediaScraper
     {
         
-        static Protections.AnimeYt AnimeYtTokenGenerator = new Protections.AnimeYt();
-        public AnimeFlv() : base("AnimeFlv", EntryType.Multi, new Uri("https://animeflv.net/"), new TimeSpan(0, 10, 0))
+        public AnimeFlv() : base("AnimeFlv", EntryType.Multi, new Uri("http://animeflv.net/"), new TimeSpan(0, 10, 0))
         {
         }
         public override List<CatalogItem> GetRecent()
@@ -71,6 +70,11 @@ namespace JadeFlix.Services.Scrapers
             item.Poster = AppContext.LocalScraper.GetOrAddItemPoster(item, item.Poster);
             item.Banner = AppContext.LocalScraper.GetOrAddItemBanner(item, item.Banner);
             item.Preview = AppContext.LocalScraper.GetOrAddItemBanner(item, item.Preview);
+            var local = AppContext.LocalScraper.Get(item.GroupName, item.KindName, item.Name);
+            if (local != null)
+            {
+                item.Watching = local.Watching;
+            }
         }
 
         public override CatalogItem GetMovie(Uri url)
@@ -301,7 +305,6 @@ namespace JadeFlix.Services.Scrapers
 
         public override List<CatalogItem> FindTvShow(string name)
         {
-            //https://animeflv.net/browse?q=*tsugu*
             var url = ConcatToBaseUrl($"browse?q=*{Uri.EscapeUriString(name)}*");
             var contents = GetContents(new Uri(url));
             var items = contents.Between("ListAnimes AX", "</ul>");

@@ -30,9 +30,9 @@ namespace JadeFlix.Domain
         {
             if (_contentCache != null)
             {
-                return _contentCache.GetOrAdd(url.ToString(), () => AppContext.Web.Read(url));
+                return _contentCache.GetOrAdd(url.ToString(), () => AppContext.Web.Get(url));
             }
-            return AppContext.Web.Read(url);
+            return AppContext.Web.Get(url);
         }
         //protected string PostJson(Uri url, string content)
         //{

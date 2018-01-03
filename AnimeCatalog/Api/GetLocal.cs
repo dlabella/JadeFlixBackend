@@ -6,14 +6,14 @@ using System.Diagnostics;
 
 namespace JadeFlix.Api
 {
-    public class GetLocal : ApiRequestResponse
+    public class GetLocal : ApiGetRequestResponse
     {
-        public GetLocal() : base("api/getLocal/{group}/{kind}")
+        public GetLocal(HttpListenerRequestCache cache = null) : base("api/getLocal/{group}/{kind}",cache)
         {
             
         }
         public override bool IsCacheable => false;
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             Trace.WriteLine("Processing GetRequest");
             var kind = parameters.UrlParameters["kind"];

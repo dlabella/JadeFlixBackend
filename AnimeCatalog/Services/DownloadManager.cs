@@ -8,6 +8,8 @@ using WebDownloader.Domain;
 using WebDownloader.Domain.EventHandlers;
 using WebDownloader.Downloaders;
 using Common;
+using System.Linq;
+
 //Reviewed: pending config for max parellel downloads
 namespace JadeFlix.Services
 {
@@ -16,7 +18,7 @@ namespace JadeFlix.Services
         private Queue<DownloadInfo> _queue = new Queue<DownloadInfo>();
 
         private static ConcurrentDictionary<string, DownloadInfo> _activeDownloads = new ConcurrentDictionary<string, DownloadInfo>();
-       
+
         private const int MaxParallelDownloads = 2;
 
         CurlDownloader _downloader;
@@ -50,13 +52,15 @@ namespace JadeFlix.Services
             return di;
         }
 
-        private bool EnqueueDownload(DownloadInfo di, bool forceDownload)
+        private bool EnqueueDownload(DownloadInfo downloadInfo, bool forceDownload)
         {
-            if (!_activeDownloads.ContainsKey(di.Id) || forceDownload)
+            if (_queue.Any(x => x.Id == downloadInfo.Id))
             {
-                _activeDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
-
-                _queue.Enqueue(di);
+                return false;
+            }
+            if (!_activeDownloads.ContainsKey(downloadInfo.Id) || forceDownload)
+            {
+                _queue.Enqueue(downloadInfo);
                 return true;
             }
             return false;
@@ -77,10 +81,13 @@ namespace JadeFlix.Services
         {
             if (!CanProcessNextQueueItem())
             {
+                Logger.Debug("Cannot process next item");
+                Logger.Debug("Queue Count: " + _queue.Count);
+                Logger.Debug("Active downloads: " + _activeDownloads.Values.Count(x => !x.IsQueued));
                 return;
             }
             try
-            {                
+            {
                 Logger.Debug("Dequeuing download item ...");
                 ThreadPool.QueueUserWorkItem((state) =>
                 {
@@ -96,7 +103,7 @@ namespace JadeFlix.Services
         private bool CanProcessNextQueueItem()
         {
             if (_queue.Count == 0) return false;
-            if (_activeDownloads.Count > MaxParallelDownloads) return false;
+            if (_activeDownloads.Values.Count(x => !x.IsQueued) >= MaxParallelDownloads) return false;
             return true;
         }
         public IEnumerable<DownloadInfo> GetDownloads()
@@ -115,7 +122,7 @@ namespace JadeFlix.Services
             );
         }
 
-        private Dictionary<string,string> GetCookieDictionary(CookieCollection cookies)
+        private Dictionary<string, string> GetCookieDictionary(CookieCollection cookies)
         {
             var cookieDictionary = new Dictionary<string, string>();
             if (cookies != null)

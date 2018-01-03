@@ -15,12 +15,12 @@ using System.Collections.Concurrent;
 
 namespace JadeFlix.Api
 {
-    public class BatchDownload : ApiRequestResponse
+    public class BatchDownload : ApiGetRequestResponse
     {
         public static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
-        public BatchDownload() : base("api/batchDownload") { }
+        public BatchDownload(HttpListenerRequestCache cache = null) : base("api/batchDownload", cache) { }
         public override bool IsCacheable => false;
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var paramGroup = parameters.QueryParameters["group"];
             if (paramGroup == null) return string.Empty;
@@ -39,7 +39,8 @@ namespace JadeFlix.Api
                 var threadKey = key;
                 var tvshow = scraper.GetTvShow(new Uri(url));
                 var path = Path.Combine(AppContext.Config.MediaPath, paramGroup, paramKind, tvshow.Name);
-                foreach (var item in tvshow.Media.Remote.OrderBy(x=>x.Name))
+
+                foreach (var item in tvshow.Media.Remote.OrderBy(x=>x.Name.Length).ThenBy(y=>y.Name))
                 {
                     var local = AppContext.LocalScraper.Get(tvshow.GroupName, tvshow.KindName, tvshow.Name);
 

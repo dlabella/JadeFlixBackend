@@ -6,13 +6,13 @@ using System.Diagnostics;
 
 namespace JadeFlix.Api
 {
-    public class GetRecent : ApiRequestResponse
+    public class GetRecent : ApiGetRequestResponse
     {
-        public GetRecent() : base("api/getRecent/{scraper}")
+        public GetRecent(HttpListenerRequestCache cache=null) : base("api/getRecent/{scraper}",cache)
         {
             
         }
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             Trace.WriteLine("Processing GetRequest");
             var scraper = AppContext.MediaScrapers.Get(parameters.UrlParameters["scraper"]);

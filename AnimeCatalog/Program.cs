@@ -24,15 +24,16 @@ namespace JadeFlix
                 string urlPrefix = args[2];
 
                 WebServer server = new WebServer(ip, port, urlPrefix);
-                server.RegisterRequestHandler(new Api.GetRecent());
-                server.RegisterRequestHandler(new Api.GetItem());
-                server.RegisterRequestHandler(new Api.GetMedia());
-                server.RegisterRequestHandler(new Api.GetMediaUrl());
-                server.RegisterRequestHandler(new Api.GetDownloads());
-                server.RegisterRequestHandler(new Api.GetLocal());
-                server.RegisterRequestHandler(new Api.FindItem());
-                server.RegisterRequestHandler(new Api.Download());
-                server.RegisterRequestHandler(new Api.BatchDownload());
+                server.RegisterRequestHandler(new Api.GetRecent(server.Cache));
+                server.RegisterRequestHandler(new Api.GetItem(server.Cache));
+                server.RegisterRequestHandler(new Api.PostItem(server.Cache));
+                server.RegisterRequestHandler(new Api.GetMedia(server.Cache));
+                server.RegisterRequestHandler(new Api.GetMediaUrl(server.Cache));
+                server.RegisterRequestHandler(new Api.GetDownloads(server.Cache));
+                server.RegisterRequestHandler(new Api.GetLocal(server.Cache));
+                server.RegisterRequestHandler(new Api.FindItem(server.Cache));
+                server.RegisterRequestHandler(new Api.Download(server.Cache));
+                server.RegisterRequestHandler(new Api.BatchDownload(server.Cache));
 
                 System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
 

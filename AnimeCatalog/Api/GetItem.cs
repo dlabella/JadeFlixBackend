@@ -7,13 +7,13 @@ using Common;
 
 namespace JadeFlix.Api
 {
-    public class GetItem : ApiRequestResponse
+    public class GetItem : ApiGetRequestResponse
     {
         //JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling. };
 
-        public GetItem() : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}") { }
+        public GetItem(HttpListenerRequestCache cache = null) : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}",cache) { }
 
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var scraperId = parameters.UrlParameters["scraper"];
             var kind = parameters.UrlParameters["kind"];
@@ -44,6 +44,10 @@ namespace JadeFlix.Api
             {
                 Console.WriteLine("Item Name: " + name);
                 var entry = scraper.GetTvShow(new Uri(url));
+                if (localEntry != null)
+                {
+                    entry.Watching = localEntry.Watching;
+                }
                 AppContext.LocalScraper.SetLocalMedia(entry);
                 retVal = JsonConvert.SerializeObject(entry);
 

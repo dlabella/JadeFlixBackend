@@ -9,11 +9,11 @@ using System.IO;
 
 namespace JadeFlix.Api
 {
-    public class Download : ApiRequestResponse
+    public class Download : ApiGetRequestResponse
     {
-        public Download() : base("api/download"){}
+        public Download(HttpListenerRequestCache cache = null) : base("api/download",cache){}
         public override bool IsCacheable => false;
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var paramId = parameters.QueryParameters["id"];
             var paramGroup = parameters.QueryParameters["group"];

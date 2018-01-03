@@ -65,7 +65,7 @@ namespace JadeFlix.Domain
         public MediaSource Media { get; set; }
         [JsonProperty("properties")]
         public Dictionary<ItemProperty, string> Properties{get;set;}
-
-        
+        [JsonProperty("watching")]
+        public bool Watching { get; set; }
     }
 }

@@ -11,11 +11,11 @@ using System.Diagnostics;
 
 namespace JadeFlix.Api
 {
-    public class GetMediaUrl : ApiRequestResponse
+    public class GetMediaUrl : ApiGetRequestResponse
     {
-        public GetMediaUrl() : base("api/getmediaurl/{scraper}/{media_uid}") { }
+        public GetMediaUrl(HttpListenerRequestCache cache = null) : base("api/getmediaurl/{scraper}/{media_uid}",cache) { }
 
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var scraper = AppContext.MediaScrapers.Get(parameters.UrlParameters["scraper"]);
             if (scraper == null) return string.Empty;

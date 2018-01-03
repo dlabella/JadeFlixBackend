@@ -116,12 +116,12 @@ namespace JadeFlix.Services.Scrapers
 
                 Logger.Debug("Loading: " + directory.Name);
                 var item = Get(group, kind, directory.Name);
-                if (item != null && item.Media.Local.Count > 0)
+                if (item != null && (item.Media.Local.Count > 0 || item.Watching))
                 {
                     items.Add(item);
                 }
             }
-            return items;
+            return items.OrderByDescending(x=>x.Watching).ToList();
         }
 
         private void ProcessFixes(DirectoryInfo dir)
@@ -137,12 +137,16 @@ namespace JadeFlix.Services.Scrapers
             {
                 try
                 {
-                    var item = JsonConvert.DeserializeObject<CatalogItem>(File.ReadAllText(data));
-                    if (!string.IsNullOrEmpty(item.Name) &&
-                        !string.IsNullOrEmpty(item.KindName) &&
-                        !string.IsNullOrEmpty(item.GroupName))
+                    var jsonData = File.ReadAllText(data);
+                    if (jsonData != null)
                     {
-                        return item;
+                        var item = JsonConvert.DeserializeObject<CatalogItem>(jsonData);
+                        if (!string.IsNullOrEmpty(item.Name) &&
+                            !string.IsNullOrEmpty(item.KindName) &&
+                            !string.IsNullOrEmpty(item.GroupName))
+                        {
+                            return item;
+                        }
                     }
                 }
                 catch (Exception) { }
@@ -289,7 +293,7 @@ namespace JadeFlix.Services.Scrapers
                     local.Add(new NamedUri()
                     {
                         Name = finfo.Name,
-                        Url = new Uri(wwwpath + "/" + finfo.Name, UriKind.RelativeOrAbsolute)
+                        Url = new Uri(wwwpath + "/" + Uri.EscapeUriString(finfo.Name).Replace(":", "%3A"), UriKind.RelativeOrAbsolute)
                     });
                 }
             }

@@ -4,11 +4,11 @@ using Newtonsoft.Json;
 
 namespace JadeFlix.Api
 {
-    public class FindItem : ApiRequestResponse
+    public class FindItem : ApiGetRequestResponse
     {
-        public FindItem() : base("api/findItem/{scraper}/{name}") { }
+        public FindItem(HttpListenerRequestCache cache = null) : base("api/findItem/{scraper}/{name}",cache) { }
         public override bool IsCacheable => false;
-        public override string ProcessRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
             var scraperId = parameters.UrlParameters["scraper"];
             var name = parameters.UrlParameters["name"];
