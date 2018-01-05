@@ -39,7 +39,7 @@ namespace WebDownloader.Downloaders
             DownloadCompletedEventHandler downloadCompleted = null)
         {
 
-            string outputFilePath = filePath.CleanPath();
+            string outputFilePath = filePath.ToSafePath();
 
             var downloadInfo = new CurlDownloadInfo(id, outputFilePath, url, cookies, disableTracking, downloadChanged, downloadCompleted);
 

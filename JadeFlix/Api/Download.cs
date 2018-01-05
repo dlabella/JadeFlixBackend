@@ -6,6 +6,7 @@ using System.Web;
 using JadeFlix.Services;
 using Common;
 using System.IO;
+using Common.Logging;
 
 namespace JadeFlix.Api
 {
@@ -15,22 +16,24 @@ namespace JadeFlix.Api
         public override bool IsCacheable => false;
         public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
         {
-            var paramId = parameters.QueryParameters["id"];
+            var paramId = Uri.UnescapeDataString(parameters.QueryParameters["id"]);
             var paramGroup = parameters.QueryParameters["group"];
             if (paramGroup == null) return string.Empty;
             var paramKind = parameters.QueryParameters["kind"];
             if (paramKind == null) return string.Empty;
-            var paramName = parameters.QueryParameters["name"];
+            var paramName = Uri.UnescapeDataString(parameters.QueryParameters["name"]);
             if (paramName == null) return string.Empty;
-            var paramUrl = parameters.QueryParameters["url"].DecodeFromBase64() ;
+            var paramUrl = Uri.UnescapeDataString(parameters.QueryParameters["url"]);
             if (paramUrl == null) return string.Empty;
-            var paramFile = parameters.QueryParameters["file"];
+            var paramFile = Uri.UnescapeDataString(parameters.QueryParameters["file"]);
             if (paramFile == null) return string.Empty;
 
-            var path = Path.Combine(AppContext.Config.MediaPath, paramGroup, paramKind, paramName);
-            var file = Path.Combine(path, paramFile);
+            var path = Path.Combine(AppContext.Config.MediaPath, paramGroup, paramKind, paramName.ToSafeName());
+            var file = Path.Combine(path, paramFile.ToSafeName());
 
-            AppContext.FileDownloader.Enqueue(paramId, file, new Uri(paramUrl), Web.CookieContainer);
+            Logger.Debug($"Equeuing download Name {file.ToSafePath()} Url:{paramUrl}");
+
+            AppContext.FileDownloader.Enqueue(paramId, file.ToSafePath(), new Uri(paramUrl), Web.CookieContainer);
 
             return "{\"status\":200}";
         }

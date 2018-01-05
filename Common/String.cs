@@ -1,40 +1,66 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Common
 {
     public static class String
     {
-        public static string CleanDirectoryName(this string toCleanPath, string replaceWith = "-")
-        {
-            var invalidPathChars = Path.GetInvalidPathChars().ToList();
-            invalidPathChars.Add('!');
-            if (toCleanPath.Length>2 && toCleanPath[1]==':')
-            {
-                toCleanPath = toCleanPath[0] +":"+ toCleanPath.Substring(2).Replace(":", replaceWith);
-            }
-            else
-            {
-                toCleanPath=toCleanPath.Replace(":", replaceWith);
-            }
-            foreach (char badChar in invalidPathChars)
-            {
-                toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
-            }
-            if (string.IsNullOrWhiteSpace(replaceWith) == false)
-            {
-                toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
-            }
-            return toCleanPath;
-        }
+        //public static string CleanDirectoryName(this string toCleanPath, string replaceWith = "-")
+        //{
+        //    var invalidFileChars = Path.GetInvalidPathChars().ToList();
+        //    invalidFileChars.Add('!');
+        //    invalidFileChars.Add('/');
+        //    invalidFileChars.Add('\\');
+        //    //clean bad filename chars  
+        //    foreach (char badChar in invalidFileChars)
+        //    {
+        //        toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
+        //    }
+        //    if (string.IsNullOrWhiteSpace(replaceWith) == false)
+        //    {
+        //        toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
+        //    }
+        //    return toCleanPath;
+        //}
 
-        public static string CleanFileName(this string toCleanPath, string replaceWith = "-")
+        //public static string CleanDirectoryPath(this string toCleanPath, string replaceWith = "-")
+        //{
+        //    var invalidPathChars = Path.GetInvalidPathChars().ToList();
+        //    invalidPathChars.Add('!');
+        //    if (toCleanPath.Length > 2 && toCleanPath[1] == ':')
+        //    {
+        //        toCleanPath = toCleanPath[0] + ":" + toCleanPath.Substring(2).Replace(":", replaceWith);
+        //    }
+        //    else
+        //    {
+        //        toCleanPath = toCleanPath.Replace(":", replaceWith);
+        //    }
+        //    foreach (char badChar in invalidPathChars)
+        //    {
+        //        toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
+        //    }
+        //    if (string.IsNullOrWhiteSpace(replaceWith) == false)
+        //    {
+        //        toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
+        //    }
+        //    return toCleanPath;
+        //}
+
+        public static string ToSafeName(this string toCleanPath, string replaceWith = "-")
         {
             var invalidFileChars = Path.GetInvalidFileNameChars().ToList();
             invalidFileChars.Add('!');
             invalidFileChars.Add('/');
             invalidFileChars.Add('\\');
+            foreach(var invalidDirChar in Path.GetInvalidPathChars())
+            {
+                if (!invalidFileChars.Contains(invalidDirChar))
+                {
+                    invalidFileChars.Add(invalidDirChar);
+                }
+            }
             //clean bad filename chars  
             foreach (char badChar in invalidFileChars)
             {
@@ -47,19 +73,30 @@ namespace Common
             return toCleanPath;
         }
 
-        public static string CleanPath(this string toCleanPath, string replaceWith = "-")
+        public static string ToSafePath(this string toCleanPath, string replaceWith = "-")
         {
-            //get just the filename - can't use Path.GetFileName since the path might be bad! 
+            StringBuilder safePath = new StringBuilder();
             string[] pathParts = toCleanPath.Split(new char[] { PathSeparator });
-            string newFileName = pathParts[pathParts.Length - 1];
-            //get just the path  
-            string newPath = toCleanPath.Substring(0, toCleanPath.Length - newFileName.Length);
-            //clean bad path chars  
-            newPath = newPath.CleanDirectoryName(replaceWith);
-
-            newFileName = newFileName.CleanFileName(replaceWith);
-            //return new, clean path:  
-            return newPath + newFileName;
+            int i = 0;
+            int lastPart = (pathParts.Length - 1);
+            foreach(var part in pathParts)
+            {
+                if (i==0 && part.EndsWith(":"))
+                {
+                    safePath.Append(part);
+                }
+                else
+                {
+                    safePath.Append(part.ToSafeName());
+                }
+                
+                if (i < lastPart)
+                {
+                    safePath.Append(PathSeparator);
+                }
+                i++;
+            }
+            return safePath.ToString();
         }
 
         public static string Between(this string src, string from, string to, int startIndex = 0, bool includeStart = false, bool includeEnd = false)

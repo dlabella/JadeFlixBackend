@@ -44,7 +44,7 @@ namespace JadeFlix.Api
                 {
                     var local = AppContext.LocalScraper.Get(tvshow.GroupName, tvshow.KindName, tvshow.Name);
 
-                    string fileName = (item.Name + ".mp4").CleanFileName();
+                    string fileName = (item.Name + ".mp4").ToSafeName();
                     if (local != null && local.Media.Local.Any(x => string.Compare(x.Name, fileName, true) == 0))
                     {
                         Logger.Debug("Skipping " + item.Name + " already in local");

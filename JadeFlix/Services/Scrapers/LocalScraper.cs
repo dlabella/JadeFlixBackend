@@ -212,24 +212,24 @@ namespace JadeFlix.Services.Scrapers
             string fileName = string.Empty;
 
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name, imageType + ".jpg");
-            path = path.CleanPath();
+            path = path.ToSafePath();
             fileName = imageType + ".jpg";
             if (File.Exists(path))
             {
-                return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.CleanDirectoryName() + "/" + fileName.CleanFileName();
+                return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.ToSafeName() + "/" + fileName.ToSafeName();
             }
             else if (imageType == "poster")
             {
                 DownloadFileIfNotLocal(url, path, true);
             }
 
-            fileName = Common.String.CleanPath(name + "_" + imageType + ".jpg");
+            fileName = name + "_" + imageType + ".jpg";
             var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName);
-            cache = cache.CleanPath();
+            cache = cache.ToSafePath();
 
             if (File.Exists(cache))
             {
-                return AppContext.Config.WwwCachePath + "/" + group + "/" + kind + "/" + fileName.CleanDirectoryName();
+                return AppContext.Config.WwwCachePath + "/" + group + "/" + kind + "/" + fileName.ToSafeName();
             }
             else
             {
@@ -252,20 +252,20 @@ namespace JadeFlix.Services.Scrapers
             string fileName = string.Empty;
 
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name, imageType + ".jpg");
-            path = path.CleanPath();
+            path = path.ToSafePath();
             fileName = imageType + ".jpg";
             if (File.Exists(path))
             {
-                return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.CleanDirectoryName() + "/" + fileName.CleanFileName();
+                return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.ToSafeName() + "/" + fileName.ToSafeName();
             }
 
-            fileName = Common.String.CleanPath(name + "_" + imageType + ".jpg");
+            fileName = name + "_" + imageType + ".jpg";
             var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName);
-            cache = cache.CleanPath();
+            cache = cache.ToSafePath();
 
             if (File.Exists(cache))
             {
-                return AppContext.Config.WwwCachePath + "/" + group + "/" + kind + "/" + fileName.CleanDirectoryName();
+                return AppContext.Config.WwwCachePath + "/" + group + "/" + kind + "/" + fileName.ToSafeName();
             }
             return string.Empty;
         }
@@ -364,7 +364,7 @@ namespace JadeFlix.Services.Scrapers
 
         public string GetWwwPath(CatalogItem item)
         {
-            var path = AppContext.Config.WwwMediaPath.TrimEnd('/') + "/" + item.GroupName + "/" + item.KindName + "/" + item.Name.CleanDirectoryName();
+            var path = AppContext.Config.WwwMediaPath.TrimEnd('/') + "/" + item.GroupName + "/" + item.KindName + "/" + item.Name.ToSafeName();
             return path;
         }
 
@@ -375,8 +375,8 @@ namespace JadeFlix.Services.Scrapers
 
         public string GetMediaPath(string group, string kind, string name)
         {
-            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.CleanDirectoryName());
-            return path.CleanDirectoryName();
+            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name);
+            return path.ToSafePath();
         }
 
     }

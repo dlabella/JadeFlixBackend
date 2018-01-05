@@ -10,13 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\DownloadManager\WebDownloader.csproj" />
-    <ProjectReference Include="..\..\SimpleWebApiServer\SimpleWebApiServer\SimpleWebApiServer.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\SimpleWebApiServer\SimpleWebApiServer.csproj" />
+    <ProjectReference Include="..\WebDownloader\WebDownloader.csproj" />
   </ItemGroup>
 
   <ItemGroup>

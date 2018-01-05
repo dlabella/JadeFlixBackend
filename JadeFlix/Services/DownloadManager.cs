@@ -116,7 +116,7 @@ namespace JadeFlix.Services
         {
             _activeDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
 
-            _downloader.Download(di.Id, di.File.CleanPath(), di.Source, GetCookieDictionary(di.Cookies), di.DisableTracking,
+            _downloader.Download(di.Id, di.File.ToSafePath(), di.Source, GetCookieDictionary(di.Cookies), di.DisableTracking,
                UpdateActiveDownload,
                ActiveDownloadCompleted
             );
