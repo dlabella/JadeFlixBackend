@@ -300,7 +300,7 @@ namespace JadeFlix.Services.Scrapers
             {
                 return EntryType.Movie;
             }
-            return EntryType.Unknown;
+            return EntryType.TvShow;
         }
 
         public override List<CatalogItem> FindTvShow(string name)

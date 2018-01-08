@@ -211,7 +211,7 @@ namespace JadeFlix.Services.Scrapers
 
             string fileName = string.Empty;
 
-            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name, imageType + ".jpg");
+            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName(), imageType + ".jpg");
             path = path.ToSafePath();
             fileName = imageType + ".jpg";
             if (File.Exists(path))
@@ -224,7 +224,7 @@ namespace JadeFlix.Services.Scrapers
             }
 
             fileName = name + "_" + imageType + ".jpg";
-            var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName);
+            var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName.ToSafeName());
             cache = cache.ToSafePath();
 
             if (File.Exists(cache))
@@ -251,7 +251,7 @@ namespace JadeFlix.Services.Scrapers
         {
             string fileName = string.Empty;
 
-            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name, imageType + ".jpg");
+            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName(), imageType + ".jpg");
             path = path.ToSafePath();
             fileName = imageType + ".jpg";
             if (File.Exists(path))
@@ -260,7 +260,7 @@ namespace JadeFlix.Services.Scrapers
             }
 
             fileName = name + "_" + imageType + ".jpg";
-            var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName);
+            var cache = Path.Combine(AppContext.Config.FilesCachePath, group, kind, fileName.ToSafeName());
             cache = cache.ToSafePath();
 
             if (File.Exists(cache))
@@ -375,7 +375,7 @@ namespace JadeFlix.Services.Scrapers
 
         public string GetMediaPath(string group, string kind, string name)
         {
-            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name);
+            var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName());
             return path.ToSafePath();
         }
 

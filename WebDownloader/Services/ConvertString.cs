@@ -40,17 +40,21 @@ namespace WebDownloader.Services
             }
             var val = 0M;
             var strBs = str.Trim().ToUpper();
+            int i = 0;
             if (strBs.Contains("G"))
             {
-                return decimal.TryParse(strBs.Replace("G", ""), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1073741824) : 0;
+                i = strBs.IndexOf("G");
+                return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1073741824) : 0;
             }
             if (strBs.Contains("M"))
             {
-                return decimal.TryParse(strBs.Replace("M", ""), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1048576) : 0;
+                i = strBs.IndexOf("M");
+                return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1048576) : 0;
             }
             if (strBs.Contains("K"))
             {
-                return decimal.TryParse(strBs.Replace("K", ""), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1024) : 0;
+                i = strBs.IndexOf("K");
+                return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1024) : 0;
             }
             return decimal.TryParse(strBs, out val) ? (int)val : 0;
         }

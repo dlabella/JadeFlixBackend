@@ -21,11 +21,12 @@ namespace JadeFlix.Services
 
         private const int MaxParallelDownloads = 2;
 
-        CurlDownloader _downloader;
+        YtDownloader _downloader;
 
         public DownloadManager()
         {
-            _downloader = new CurlDownloader();
+            //_downloader = new CurlDownloader();
+            _downloader = new YtDownloader();
         }
 
         public void Enqueue(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool forceDownload = false, bool disableTracking = false)

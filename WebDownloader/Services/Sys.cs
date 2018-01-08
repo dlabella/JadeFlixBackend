@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Logging;
+using System;
 using System.Diagnostics;
 
 namespace WebDownloader.Services
@@ -26,6 +27,7 @@ namespace WebDownloader.Services
                     RedirectStandardError = true
                 }
             };
+            Logger.Debug($"Command Exceuted: {command} {arguments}");
             process.OutputDataReceived += (sender, e) =>
             {
                 if (e.Data == null || completed) return;

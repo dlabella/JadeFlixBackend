@@ -27,7 +27,7 @@ namespace WebDownloader.Domain
         public DownloadInfo(string id, string file, Uri source, bool isQueued, bool disableTracking)
         {
             Id = id;
-            File = file.ToSafePath();
+            File = file?.ToSafePath();
             Source = source;
             IsQueued = isQueued;
             DisableTracking = disableTracking;

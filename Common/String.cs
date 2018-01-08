@@ -51,6 +51,7 @@ namespace Common
         public static string ToSafeName(this string toCleanPath, string replaceWith = "-")
         {
             var invalidFileChars = Path.GetInvalidFileNameChars().ToList();
+            invalidFileChars.Add(':');
             invalidFileChars.Add('!');
             invalidFileChars.Add('/');
             invalidFileChars.Add('\\');
