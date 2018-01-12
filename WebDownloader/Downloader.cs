@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using WebDownloader.Domain.EventHandlers;
 
-namespace WebDownloader.Downloaders
+namespace WebDownloader
 {
     public abstract class Downloader
     {

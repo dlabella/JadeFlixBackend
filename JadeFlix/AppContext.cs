@@ -20,8 +20,6 @@ namespace JadeFlix
             Web = new Web();
             FileDownloader = new DownloadManager();
             LocalScraper = new Services.Scrapers.LocalScraper();
-            //MediaScrapers.Add(new AnimeCatalog.Services.Scrapers.AnimeYt(Cache));
-            MediaScrapers.Add(new JadeFlix.Services.Scrapers.AnimeFlv());
         }
     }
 }
