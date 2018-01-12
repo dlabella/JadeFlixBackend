@@ -1,27 +1,31 @@
 ﻿using System.Net;
-using Newtonsoft.Json;
-using JadeFlix.Services;
 using SimpleWebApiServer;
 using System.Diagnostics;
+using JadeFlix.Domain.ApiParameters;
 
 namespace JadeFlix.Api
 {
-    public class GetRecent : ApiGetRequestResponse
+    public class GetRecent : ApiGetRequestResponse<GetRecentApiParameters>
     {
         public GetRecent(HttpListenerRequestCache cache=null) : base("api/getRecent/{scraper}",cache)
         {
             
         }
-        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
+
+        public override GetRecentApiParameters ParseParameters(RequestParameters parameters)
         {
-            Trace.WriteLine("Processing GetRequest");
-            var scraper = AppContext.MediaScrapers.Get(parameters.UrlParameters["scraper"]);
-            Trace.WriteLine($"Using scraper {scraper?.Name}");
-            if (scraper == null) return string.Empty;
-            Trace.WriteLine($"Getting recent items");
+            return new GetRecentApiParameters()
+            {
+                ScraperId = parameters.UrlParameters["scraper"]
+            };
+        }
+
+        protected override string ProcessGetRequest(HttpListenerRequest request, GetRecentApiParameters parameters)
+        {
+            var scraper = AppContext.MediaScrapers.Get(parameters.ScraperId);
             var data = scraper.GetRecent();
             Trace.WriteLine($"Item count: {data?.Count}");
-            return JsonConvert.SerializeObject(data);
+            return ToJson(data);
         }
     }
 }

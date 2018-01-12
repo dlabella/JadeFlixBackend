@@ -5,49 +5,8 @@ using System.Text;
 
 namespace Common
 {
-    public static class String
+    public static class StringExtensions
     {
-        //public static string CleanDirectoryName(this string toCleanPath, string replaceWith = "-")
-        //{
-        //    var invalidFileChars = Path.GetInvalidPathChars().ToList();
-        //    invalidFileChars.Add('!');
-        //    invalidFileChars.Add('/');
-        //    invalidFileChars.Add('\\');
-        //    //clean bad filename chars  
-        //    foreach (char badChar in invalidFileChars)
-        //    {
-        //        toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
-        //    }
-        //    if (string.IsNullOrWhiteSpace(replaceWith) == false)
-        //    {
-        //        toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
-        //    }
-        //    return toCleanPath;
-        //}
-
-        //public static string CleanDirectoryPath(this string toCleanPath, string replaceWith = "-")
-        //{
-        //    var invalidPathChars = Path.GetInvalidPathChars().ToList();
-        //    invalidPathChars.Add('!');
-        //    if (toCleanPath.Length > 2 && toCleanPath[1] == ':')
-        //    {
-        //        toCleanPath = toCleanPath[0] + ":" + toCleanPath.Substring(2).Replace(":", replaceWith);
-        //    }
-        //    else
-        //    {
-        //        toCleanPath = toCleanPath.Replace(":", replaceWith);
-        //    }
-        //    foreach (char badChar in invalidPathChars)
-        //    {
-        //        toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
-        //    }
-        //    if (string.IsNullOrWhiteSpace(replaceWith) == false)
-        //    {
-        //        toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
-        //    }
-        //    return toCleanPath;
-        //}
-
         public static string ToSafeName(this string toCleanPath, string replaceWith = "-")
         {
             var invalidFileChars = Path.GetInvalidFileNameChars().ToList();

@@ -27,7 +27,7 @@ namespace JadeFlix.Services.Scrapers
             var catalogItems = ParseListItems(items).Where(x=> x!=null && !string.IsNullOrEmpty(x.Name)).ToList();
             return catalogItems;
         }
-        public override CatalogItem GetTvShow(Uri url)
+        public override CatalogItem Get(Uri url)
         {
             var entry = new CatalogItem();
             var content = GetContents(url);
@@ -77,10 +77,6 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        public override CatalogItem GetMovie(Uri url)
-        {
-            throw new NotImplementedException();
-        }
         private KeyValuePair<int, NamedUri> GetTvShowEpisode(string content)
         {
             if (string.IsNullOrEmpty(content)) return default(KeyValuePair<int, NamedUri>);
@@ -303,7 +299,7 @@ namespace JadeFlix.Services.Scrapers
             return EntryType.TvShow;
         }
 
-        public override List<CatalogItem> FindTvShow(string name)
+        public override List<CatalogItem> Find(string name)
         {
             var url = ConcatToBaseUrl($"browse?q=*{Uri.EscapeUriString(name)}*");
             var contents = GetContents(new Uri(url));

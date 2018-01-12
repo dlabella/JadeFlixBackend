@@ -43,9 +43,8 @@ namespace JadeFlix.Domain
         //    return AppContext.Web.PostJson(url,content);
         //}
         public abstract IEnumerable<NamedUri> GetMediaUrls(Uri url);
-        public abstract CatalogItem GetTvShow(Uri url);
-        public abstract List<CatalogItem> FindTvShow(string name);
-        public abstract CatalogItem GetMovie(Uri uri);
+        public abstract CatalogItem Get(Uri url);
+        public abstract List<CatalogItem> Find(string name);
         public abstract List<CatalogItem> GetRecent();
         public abstract string GetMediaDownloadUrl(Uri url);
         public string ConcatToBaseUrl(string partialUrl)

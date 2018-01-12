@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using SimpleWebApiServer.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -6,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace SimpleWebApiServer
 {
-    public abstract class ApiRequestResponse
+    public abstract class ApiRequestResponse<TParams> : IApiRequestResponse
     {
         private const string URL_TOKEN_PATTERN_REGEX = "(\\{.*\\})";
         private readonly string _urlPattern;
@@ -42,8 +44,29 @@ namespace SimpleWebApiServer
             return StripPatternFromUrl(url.ToString());
         }
         public virtual bool IsCacheable => true;
-        public abstract string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters);
-        public abstract string ProcessPostRequest(HttpListenerRequest request, RequestParameters parameters,string postData);
+        public string GetRequest(HttpListenerRequest request, RequestParameters parameters)
+        {
+            var qryParams = ParseParameters(parameters);
+            return ProcessGetRequest(request, qryParams);
+        }
+        protected abstract string ProcessGetRequest(HttpListenerRequest request, TParams parameters);
+        public string PostRequest(HttpListenerRequest request, RequestParameters parameters,string postData)
+        {
+            var qryParams = ParseParameters(parameters);
+            return ProcessPostRequest(request, qryParams, postData);
+        }
+        protected abstract string ProcessPostRequest(HttpListenerRequest request, TParams parameters, string postData);
         public HttpListenerRequestCache Cache { get; set; }
+
+        public string ToJson(object obj)
+        {
+            return JsonConvert.SerializeObject(obj);
+        }
+
+        public T FromJson<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+        public abstract TParams ParseParameters(RequestParameters parameters);   
     }
 }

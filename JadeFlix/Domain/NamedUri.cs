@@ -9,6 +9,15 @@ namespace JadeFlix.Domain
     [Serializable]
     public class NamedUri:IComparable
     {
+        public NamedUri()
+        {
+
+        }
+        public NamedUri(string name, Uri url)
+        {
+            Name = name;
+            Url = url;
+        }
         [JsonProperty("name")]
 
         public string Name { get; set; }

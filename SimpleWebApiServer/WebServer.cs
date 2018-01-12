@@ -7,6 +7,7 @@ using System;
 using Common.Logging;
 using System.IO;
 using System.Linq;
+using SimpleWebApiServer.Interfaces;
 
 namespace SimpleWebApiServer
 {
@@ -14,7 +15,7 @@ namespace SimpleWebApiServer
     {
         private readonly HttpListener _listener = new HttpListener();
         private static HttpListenerRequestCache _requestCache = new HttpListenerRequestCache();
-        private List<ApiRequestResponse> _requestHandlers;
+        private List<IApiRequestResponse> _requestHandlers;
         private Requesturl _urlParser;
 
         private string _urlPrefix;
@@ -35,7 +36,7 @@ namespace SimpleWebApiServer
 
             Logger.Debug("Url Prefix: " + _urlPrefix);
 
-            _requestHandlers = new List<ApiRequestResponse>();
+            _requestHandlers = new List<IApiRequestResponse>();
 
             _urlParser = new Requesturl(prefix);
 
@@ -46,7 +47,7 @@ namespace SimpleWebApiServer
 
         public HttpListenerRequestCache Cache { get { return _requestCache; } }
 
-        public void RegisterRequestHandler(ApiRequestResponse requestHandler)
+        public void RegisterRequestHandler(IApiRequestResponse requestHandler)
         {
             Logger.Debug("Registering module for pattern : " + requestHandler.UrlPattern);
             _requestHandlers.Add(requestHandler);
@@ -67,11 +68,11 @@ namespace SimpleWebApiServer
                     if (request.HttpMethod == "POST")
                     {
                         postData = GetPostData(request);
-                        return requestHandler.ProcessPostRequest(request, requestParameters, postData);
+                        return requestHandler.PostRequest(request, requestParameters, postData);
                     }
                     else if (request.HttpMethod == "GET")
                     {
-                        return requestHandler.ProcessGetRequest(request, requestParameters);
+                        return requestHandler.GetRequest(request, requestParameters);
                     }
                 }
             }

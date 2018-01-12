@@ -1,35 +1,38 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
-using Newtonsoft.Json;
 using System;
-using System.Web;
-using JadeFlix.Services;
 using Common;
-using System.IO;
 using JadeFlix.Domain;
 using System.Diagnostics;
+using JadeFlix.Domain.ApiParameters;
 
 namespace JadeFlix.Api
 {
-    public class GetMediaUrl : ApiGetRequestResponse
+    public class GetMediaUrl : ApiGetRequestResponse<GetMediaApiParameters>
     {
-        public GetMediaUrl(HttpListenerRequestCache cache = null) : base("api/getmediaurl/{scraper}/{media_uid}",cache) { }
+        public GetMediaUrl(HttpListenerRequestCache cache = null) : base("api/getmediaurl/{scraper}/{media_uid}", cache) { }
 
-        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
+        public override GetMediaApiParameters ParseParameters(RequestParameters parameters)
         {
-            var scraper = AppContext.MediaScrapers.Get(parameters.UrlParameters["scraper"]);
-            if (scraper == null) return string.Empty;
-            var url = parameters.UrlParameters["media_uid"].DecodeFromBase64();
-            var downloadUrl = scraper.GetMediaDownloadUrl(new Uri(url));
+            return new GetMediaApiParameters()
+            {
+                ScraperId = parameters.UrlParameters["scraper"],
+                Url = parameters.UrlParameters["media_uid"]?.DecodeFromBase64()
+            };
+        }
+
+        protected override string ProcessGetRequest(HttpListenerRequest request, GetMediaApiParameters parameters)
+        {
+            if (!parameters.AreValid)
+            {
+                return string.Empty;
+            }
+            var scraper = AppContext.MediaScrapers.Get(parameters.ScraperId);
+            var downloadUrl = scraper.GetMediaDownloadUrl(new Uri(parameters.Url));
             if (!string.IsNullOrEmpty(downloadUrl))
             {
-                Trace.WriteLine("Media Url: "+downloadUrl);
-                var media = new NamedUri()
-                {
-                    Name = "Download",
-                    Url = new Uri(downloadUrl)
-                };
-                return JsonConvert.SerializeObject(media);
+                Trace.WriteLine("Media Url: " + downloadUrl);
+                return ToJson(new NamedUri("Download", new Uri(downloadUrl)));
             }
             return string.Empty;
         }

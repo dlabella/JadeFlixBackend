@@ -1,66 +1,73 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
-using Newtonsoft.Json;
 using System;
-using System.Web;
 using Common;
+using JadeFlix.Domain.ApiParameters;
+using JadeFlix.Domain;
 
 namespace JadeFlix.Api
 {
-    public class GetItem : ApiGetRequestResponse
+    public class GetItem : ApiGetRequestResponse<GetItemApiParameters>
     {
-        //JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling. };
+        public GetItem(HttpListenerRequestCache cache = null) : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}", cache) { }
 
-        public GetItem(HttpListenerRequestCache cache = null) : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}",cache) { }
-
-        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
+        protected override string ProcessGetRequest(HttpListenerRequest request, GetItemApiParameters apiParams)
         {
-            var scraperId = parameters.UrlParameters["scraper"];
-            var kind = parameters.UrlParameters["kind"];
-            var group = parameters.UrlParameters["group"];
-            var nid = parameters.UrlParameters["nid"];
-            var uid = parameters.UrlParameters["uid"];
-
-            var name = nid.DecodeFromBase64();
-            var url = uid.DecodeFromBase64();
-
-            var scraper = AppContext.MediaScrapers.Get(scraperId);
-            
-            var onlyLocal = parameters.QueryParameters.ContainsKey("onlyLocal") &&
-                            parameters.QueryParameters["onlyLocal"] == "true";
-
-            string retVal = string.Empty;
-
-            var localEntry = AppContext.LocalScraper.Get(group, kind, name);
-
-            if (onlyLocal || scraper == null)
+            if (!apiParams.AreValid)
             {
-                if (localEntry == null) return retVal;
-                retVal = JsonConvert.SerializeObject(localEntry);
-                return retVal;
+                return string.Empty;
             }
-            else if (string.Compare(kind, "TvShow", true) == 0 ||
-                     string.Compare(kind, "Movie", true) == 0)
+            Console.WriteLine("Item Name: " + apiParams.Name);
+
+            var scraper = AppContext.MediaScrapers.Get(apiParams.ScraperId);
+            var localEntry = AppContext.LocalScraper.Get(apiParams.Group, apiParams.Kind, apiParams.Name);
+
+            if (apiParams.OnlyLocal || scraper == null)
             {
-                Console.WriteLine("Item Name: " + name);
-                var entry = scraper.GetTvShow(new Uri(url));
-                if (localEntry != null)
-                {
-                    entry.Watching = localEntry.Watching;
-                }
-                AppContext.LocalScraper.SetLocalMedia(entry);
-                retVal = JsonConvert.SerializeObject(entry);
-
-                if (AppContext.LocalScraper.Compare(localEntry, entry) != 0)
-                {
-                    AppContext.LocalScraper.SaveImagesToLocal(entry);
-                    AppContext.LocalScraper.SetLocalImages(entry);
-                    AppContext.LocalScraper.Save(entry);
-                }
-
-                return retVal;
+                if (localEntry == null) return string.Empty;
+                return ToJson(localEntry);
             }
-            return string.Empty;
+            else
+            {
+                var item = ProcessCatalogItem(apiParams, scraper, localEntry);
+                return ToJson(item);
+            }
+        }
+
+        private CatalogItem ProcessCatalogItem(GetItemApiParameters apiParams, MediaScraper scraper, CatalogItem local)
+        {
+            var entry = scraper.Get(new Uri(apiParams.Url));
+            if (local != null)
+            {
+                entry.Watching = local.Watching;
+            }
+            AppContext.LocalScraper.SetLocalMedia(entry);
+
+            SyncEntries(local, entry);
+
+            return entry;
+        }
+
+        private void SyncEntries(CatalogItem local, CatalogItem remote)
+        {
+            if (AppContext.LocalScraper.Compare(local, remote) != 0)
+            {
+                AppContext.LocalScraper.SaveImagesToLocal(remote);
+                AppContext.LocalScraper.SetLocalImages(remote);
+                AppContext.LocalScraper.Save(remote);
+            }
+        }
+        public override GetItemApiParameters ParseParameters(RequestParameters parameters)
+        {
+            return new GetItemApiParameters()
+            {
+                ScraperId = parameters.UrlParameters["scraper"],
+                Kind = parameters.UrlParameters["kind"],
+                Group = parameters.UrlParameters["group"],
+                NId = parameters.UrlParameters["nid"],
+                UId = parameters.UrlParameters["uid"],
+                OnlyLocal = parameters.QueryParameters["onlyLocal"] == "true"
+            };
         }
     }
 }

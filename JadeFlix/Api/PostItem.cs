@@ -1,31 +1,28 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
-using Newtonsoft.Json;
 using System;
-using System.Web;
-using Common;
 using JadeFlix.Domain;
 using System.Linq;
 using Common.Logging;
+using JadeFlix.Domain.ApiParameters;
 
 namespace JadeFlix.Api
 {
-    public class PostItem : ApiPostRequestResponse
+    public class PostItem : ApiPostRequestResponse<EmptyApiParameters>
     {
         public PostItem(HttpListenerRequestCache cache = null) : base("api/postItem", cache) { }
 
-        
-        public override string ProcessPostRequest(HttpListenerRequest request, RequestParameters parameters, string postData)
+        protected override string ProcessPostRequest(HttpListenerRequest request, EmptyApiParameters parameters, string postData)
         {
-            var item = JsonConvert.DeserializeObject<CatalogItem>(postData);
+            var item = FromJson<CatalogItem>(postData);
             if (item != null)
             {
                 AppContext.LocalScraper.Save(item);
                 UpdateCacheEntries(item);
 
-                return "{\"status\":\"ok\"}";
+                return ToJson(new { status = "ok" });
             }
-            return "{\"status\":\"error\"}";
+            return ToJson(new { status = "error" });
         }
 
         private void UpdateCacheEntries(CatalogItem item)
@@ -47,7 +44,7 @@ namespace JadeFlix.Api
             {
                 if (cache.Value != null)
                 {
-                    var cachedItems = JsonConvert.DeserializeObject<CatalogItem[]>(cache.Value);
+                    var cachedItems = FromJson<CatalogItem[]>(cache.Value);
                     var cachedItem = cachedItems.FirstOrDefault(x => x.UId == item.UId);
                     if (cachedItem != null)
                     {
@@ -59,7 +56,7 @@ namespace JadeFlix.Api
                         //Ups! not found in cache, but it must be in...
                         base.Cache.TryRemoveCachedItem(cache);
                     }
-                    cache.Value = JsonConvert.SerializeObject(cachedItems);
+                    cache.Value = ToJson(cachedItems);
                     Logger.Debug("Updated CatalogItem Array from cache [" + cacheFilter + "]");
                 }
             }
@@ -71,15 +68,20 @@ namespace JadeFlix.Api
             {
                 if (cache.Value != null && cache.Source.Contains(item.UId))
                 {
-                    var cachedItem = JsonConvert.DeserializeObject<CatalogItem>(cache.Value);
+                    var cachedItem = FromJson<CatalogItem>(cache.Value);
                     if (cachedItem != null && cachedItem.UId == item.UId)
                     {
-                        cache.Value = JsonConvert.SerializeObject(item);
+                        cache.Value = ToJson(item);
                     }
                     
                     Logger.Debug("Updated CatalogItem from cache [" + cacheFilter + "]");
                 }
             }
+        }
+
+        public override EmptyApiParameters ParseParameters(RequestParameters parameters)
+        {
+            return new EmptyApiParameters();
         }
     }
 }

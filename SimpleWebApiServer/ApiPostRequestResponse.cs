@@ -6,14 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace SimpleWebApiServer
 {
-    public abstract class ApiPostRequestResponse : ApiRequestResponse
+    public abstract class ApiPostRequestResponse<TParams> : ApiRequestResponse<TParams>
     {
         public override string HttpMethod => "POST";
         public override bool IsCacheable => false;
         public ApiPostRequestResponse(string urlPattern, HttpListenerRequestCache cache = null) : base(urlPattern, cache)
         {
         }
-        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
+        protected override string ProcessGetRequest(HttpListenerRequest request, TParams parameters)
         {
             throw new NotSupportedException();
         }

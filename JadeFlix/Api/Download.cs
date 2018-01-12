@@ -1,41 +1,43 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
-using Newtonsoft.Json;
 using System;
-using System.Web;
 using JadeFlix.Services;
 using Common;
 using System.IO;
 using Common.Logging;
+using JadeFlix.Domain.ApiParameters;
 
 namespace JadeFlix.Api
 {
-    public class Download : ApiGetRequestResponse
+    public class Download : ApiGetRequestResponse<DownloadApiParameters>
     {
-        public Download(HttpListenerRequestCache cache = null) : base("api/download",cache){}
+        public Download(HttpListenerRequestCache cache = null) : base("api/download", cache) { }
         public override bool IsCacheable => false;
-        public override string ProcessGetRequest(HttpListenerRequest request, RequestParameters parameters)
+        protected override string ProcessGetRequest(HttpListenerRequest request, DownloadApiParameters apiParams)
         {
-            var paramId = Uri.UnescapeDataString(parameters.QueryParameters["id"]);
-            var paramGroup = parameters.QueryParameters["group"];
-            if (paramGroup == null) return string.Empty;
-            var paramKind = parameters.QueryParameters["kind"];
-            if (paramKind == null) return string.Empty;
-            var paramName = Uri.UnescapeDataString(parameters.QueryParameters["name"]);
-            if (paramName == null) return string.Empty;
-            var paramUrl = Uri.UnescapeDataString(parameters.QueryParameters["url"]);
-            if (paramUrl == null) return string.Empty;
-            var paramFile = Uri.UnescapeDataString(parameters.QueryParameters["file"]);
-            if (paramFile == null) return string.Empty;
+            if (!apiParams.AreValid)
+            {
+                return string.Empty;
+            }
 
-            var path = Path.Combine(AppContext.Config.MediaPath, paramGroup, paramKind, paramName.ToSafeName());
-            var file = Path.Combine(path, paramFile.ToSafeName());
+            Logger.Debug($"Equeuing download Name {apiParams.FiletPath.ToSafePath()} Url:{apiParams.Url}");
 
-            Logger.Debug($"Equeuing download Name {file.ToSafePath()} Url:{paramUrl}");
+            AppContext.FileDownloader.Enqueue(apiParams.Id, apiParams.FiletPath.ToSafePath(), new Uri(apiParams.Url), Web.CookieContainer);
 
-            AppContext.FileDownloader.Enqueue(paramId, file.ToSafePath(), new Uri(paramUrl), Web.CookieContainer);
-
-            return "{\"status\":200}";
+            return ToJson(new { status = 200 });
+        }
+        public override DownloadApiParameters ParseParameters(RequestParameters parameters)
+        {
+            return new DownloadApiParameters()
+            {
+                Id = Uri.UnescapeDataString(parameters.QueryParameters["id"]),
+                Group = parameters.QueryParameters["group"],
+                Kind = parameters.QueryParameters["kind"],
+                Name = Uri.UnescapeDataString(parameters.QueryParameters["name"]),
+                Url = Uri.UnescapeDataString(parameters.QueryParameters["url"]),
+                File = Uri.UnescapeDataString(parameters.QueryParameters["file"])
+            };
         }
     }
+    
 }
