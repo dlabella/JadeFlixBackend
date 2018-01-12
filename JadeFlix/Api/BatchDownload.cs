@@ -96,7 +96,7 @@ namespace JadeFlix.Api
                 Group = parameters.GetQueryParameter("group"),
                 Kind = parameters.GetQueryParameter("kind"),
                 Url = parameters.GetQueryParameter("uid").DecodeFromBase64(),
-                Scraper = AppContext.MediaScrapers.Get(GetParameter(parameters.QueryParameters["scraper"]))
+                Scraper = AppContext.MediaScrapers.Get(parameters.GetQueryParameter("scraper"))
             };
         }
     }
