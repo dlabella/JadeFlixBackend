@@ -93,10 +93,10 @@ namespace JadeFlix.Api
         {
             return new BatchApiParams
             {
-                Group = parameters.QueryParameters["group"],
-                Kind = parameters.QueryParameters["kind"],
-                Url = parameters.QueryParameters["uid"].DecodeFromBase64(),
-                Scraper = AppContext.MediaScrapers.Get(parameters.QueryParameters["scraper"])
+                Group = parameters.GetQueryParameter("group"),
+                Kind = parameters.GetQueryParameter("kind"),
+                Url = parameters.GetQueryParameter("uid").DecodeFromBase64(),
+                Scraper = AppContext.MediaScrapers.Get(GetParameter(parameters.QueryParameters["scraper"]))
             };
         }
     }

@@ -15,8 +15,8 @@ namespace JadeFlix.Api
         {
             return new GetMediaApiParameters()
             {
-                ScraperId = parameters.UrlParameters["scraper"],
-                Url = parameters.UrlParameters["episode_uid"]?.DecodeFromBase64()
+                ScraperId = parameters.GetUrlParameter("scraper"),
+                Url = parameters.GetUrlParameter("episode_uid").DecodeFromBase64()
             };
         }
 

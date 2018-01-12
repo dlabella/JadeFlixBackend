@@ -2,6 +2,7 @@
 using SimpleWebApiServer;
 using Newtonsoft.Json;
 using JadeFlix.Domain.ApiParameters;
+using System;
 
 namespace JadeFlix.Api
 {
@@ -28,8 +29,8 @@ namespace JadeFlix.Api
         {
             return new FindItemApiParamters()
             {
-                Name = parameters.UrlParameters["name"],
-                ScraperId = parameters.UrlParameters["scraper"]
+                Name = Uri.UnescapeDataString(parameters.GetUrlParameter("name")),
+                ScraperId = parameters.GetUrlParameter("scraper")
             };
         }
     }

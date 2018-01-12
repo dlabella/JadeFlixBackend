@@ -67,6 +67,6 @@ namespace SimpleWebApiServer
         {
             return JsonConvert.DeserializeObject<T>(json);
         }
-        public abstract TParams ParseParameters(RequestParameters parameters);   
+        public abstract TParams ParseParameters(RequestParameters parameters);
     }
 }

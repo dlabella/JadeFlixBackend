@@ -23,13 +23,19 @@ namespace JadeFlix
                 int port = int.Parse(args[1]);
                 string ip = args[0];
                 string urlPrefix = args[2];
-
+                string debug = string.Empty;
+                if (args.Length > 3 && !string.IsNullOrEmpty(args[3]))
+                {
+                    debug = args[3];
+                }
                 WebServer server = new WebServer(ip, port, urlPrefix);
 
                 RegisterRequestHandlers(server);
                 RegisterMediaScrapers();
-
-                //System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
+                if (debug.ToLower().EndsWith("debug"))
+                {
+                    System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
+                }
                 server.Run();
                 Logger.Debug($"Listening at {ip}:{port} with urlPrefix {urlPrefix}");
                 Logger.Debug("Press Ctrl+C to exit ...");

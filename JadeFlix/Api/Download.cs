@@ -30,12 +30,12 @@ namespace JadeFlix.Api
         {
             return new DownloadApiParameters()
             {
-                Id = Uri.UnescapeDataString(parameters.QueryParameters["id"]),
-                Group = parameters.QueryParameters["group"],
-                Kind = parameters.QueryParameters["kind"],
-                Name = Uri.UnescapeDataString(parameters.QueryParameters["name"]),
-                Url = Uri.UnescapeDataString(parameters.QueryParameters["url"]),
-                File = Uri.UnescapeDataString(parameters.QueryParameters["file"])
+                Id = Uri.UnescapeDataString(parameters.GetQueryParameter("id")),
+                Group = parameters.GetQueryParameter("group"),
+                Kind = parameters.GetQueryParameter("kind"),
+                Name = Uri.UnescapeDataString(parameters.GetQueryParameter("name")),
+                Url = Uri.UnescapeDataString(parameters.GetQueryParameter("url")),
+                File = Uri.UnescapeDataString(parameters.GetQueryParameter("file"))
             };
         }
     }

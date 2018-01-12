@@ -12,6 +12,24 @@ namespace SimpleWebApiServer
         {
 
         }
+        public string GetUrlParameter(string parameter)
+        {
+            if (_urlParameters.ContainsKey(parameter))
+            {
+                return _urlParameters[parameter];
+            }
+            return string.Empty;
+        }
+
+        public string GetQueryParameter(string parameter)
+        {
+            if (_queryParameters.ContainsKey(parameter))
+            {
+                return _queryParameters[parameter];
+            }
+            return string.Empty;
+        }
+
         public RequestParameters(Dictionary<string, string> urlParameters)
         {
             _urlParameters = new Dictionary<string, string>(urlParameters, StringComparer.OrdinalIgnoreCase);

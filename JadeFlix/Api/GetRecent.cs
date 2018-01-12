@@ -16,7 +16,7 @@ namespace JadeFlix.Api
         {
             return new GetRecentApiParameters()
             {
-                ScraperId = parameters.UrlParameters["scraper"]
+                ScraperId = parameters.GetUrlParameter("scraper")
             };
         }
 

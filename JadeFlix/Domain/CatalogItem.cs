@@ -1,5 +1,6 @@
 ﻿using Common;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using static JadeFlix.Domain.Enums;
@@ -52,10 +53,12 @@ namespace JadeFlix.Domain
             }
         }
         [JsonProperty("kind")]
+        [JsonConverter(typeof(StringEnumConverter))]
         public EntryType Kind { get; set; } = EntryType.Unknown;
         [JsonProperty("kindName")]
         public string KindName { get { return Kind.ToString(); } }
         [JsonProperty("group")]
+        [JsonConverter(typeof(StringEnumConverter))]
         public EntryGroup Group { get; set; } = EntryGroup.Unknown;
         [JsonProperty("groupName")]
         public string GroupName { get { return Group.ToString(); } }

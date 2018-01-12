@@ -61,12 +61,12 @@ namespace JadeFlix.Api
         {
             return new GetItemApiParameters()
             {
-                ScraperId = parameters.UrlParameters["scraper"],
-                Kind = parameters.UrlParameters["kind"],
-                Group = parameters.UrlParameters["group"],
-                NId = parameters.UrlParameters["nid"],
-                UId = parameters.UrlParameters["uid"],
-                OnlyLocal = parameters.QueryParameters["onlyLocal"] == "true"
+                ScraperId = parameters.GetUrlParameter("scraper"),
+                Kind = parameters.GetUrlParameter("kind"),
+                Group = parameters.GetUrlParameter("group"),
+                NId = parameters.GetUrlParameter("nid"),
+                UId = parameters.GetUrlParameter("uid"),
+                OnlyLocal = parameters.GetUrlParameter("onlyLocal") == "true"
             };
         }
     }

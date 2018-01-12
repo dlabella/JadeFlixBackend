@@ -17,8 +17,8 @@ namespace JadeFlix.Api
         {
             return new GetLocalApiParameters()
             {
-                Group = parameters.UrlParameters["group"],
-                Kind = parameters.UrlParameters["kind"]
+                Group = parameters.GetUrlParameter("group"),
+                Kind = parameters.GetUrlParameter("kind")
             };
         }
 

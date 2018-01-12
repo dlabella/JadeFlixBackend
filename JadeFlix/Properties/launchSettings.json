@@ -2,7 +2,7 @@
   "profiles": {
     "AnimeCatalog": {
       "commandName": "Project",
-      "commandLineArgs": "localhost 5000 jadeflix"
+      "commandLineArgs": "localhost 5000 jadeflix --debug"
     }
   }
 }
