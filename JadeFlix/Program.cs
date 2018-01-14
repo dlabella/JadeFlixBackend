@@ -20,22 +20,21 @@ namespace JadeFlix
             try
             {
                 AppContext.Initialize();
-                int port = int.Parse(args[1]);
-                string ip = args[0];
-                string urlPrefix = args[2];
-                string debug = string.Empty;
-                if (args.Length > 3 && !string.IsNullOrEmpty(args[3]))
-                {
-                    debug = args[3];
-                }
-                WebServer server = new WebServer(ip, port, urlPrefix);
+                int port = GetIntArgument(args,1);
+                string ip = GetStringArgument(args,0);
+                string urlPrefix = GetStringArgument(args,2);
+                string debug = GetStringArgument(args,3);
 
-                RegisterRequestHandlers(server);
-                RegisterMediaScrapers();
                 if (debug.ToLower().EndsWith("debug"))
                 {
                     System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
                 }
+
+                WebServer server = new WebServer(ip, port, urlPrefix);
+
+                RegisterRequestHandlers(server);
+                RegisterMediaScrapers();
+                
                 server.Run();
                 Logger.Debug($"Listening at {ip}:{port} with urlPrefix {urlPrefix}");
                 Logger.Debug("Press Ctrl+C to exit ...");
@@ -45,6 +44,28 @@ namespace JadeFlix
             {
                 Logger.Debug("General failure exception: " + ex.Message);
             }
+        }
+
+        private static string GetStringArgument(string[] arguments, int index)
+        {
+            if (arguments.Length > index)
+            {
+                return arguments[index];
+            }
+            return string.Empty;
+        }
+
+        private static int GetIntArgument(string[] arguments, int index)
+        {
+            if (arguments.Length > index)
+            {
+                var num = GetStringArgument(arguments, index);
+                if (int.TryParse(num, out int inum))
+                {
+                    return inum;
+                }
+            }
+            return 0;
         }
 
         private static void RegisterMediaScrapers()
