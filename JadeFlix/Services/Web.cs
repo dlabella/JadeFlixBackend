@@ -4,6 +4,7 @@ using System;
 using System.Text;
 using CloudFlareUtilities;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Services
 {
@@ -23,37 +24,37 @@ namespace JadeFlix.Services
 
         public static CookieContainer CookieContainer { get; } = new CookieContainer();
 
-        public string Get(string url, bool buffered = true)
+        public async Task<string> GetAsync(string url, bool buffered = true)
         {
-            return Get(new Uri(url), buffered);
+            return await GetAsync(new Uri(url), buffered);
         }
 
-        public string Get(Uri url, bool buffered = true)
+        public async Task<string> GetAsync(Uri url, bool buffered = true)
         {
-            var result = _client.GetStringAsync(url).Result;
+            var result = await _client.GetStringAsync(url);
             return result;
         }
-        public string PostJson(Uri url, string content)
+        public async Task<string> PostJson(Uri url, string content)
         {
             var httpContent = new StringContent(content, Encoding.UTF8, "application/json");
 
-            var httpResponse = _client.PostAsync(url, httpContent).Result;
+            var httpResponse = await _client.PostAsync(url, httpContent);
             if (httpResponse.Content != null)
             {
-                var responseContent = httpResponse.Content.ReadAsStringAsync().Result;
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
                 return responseContent;
             }
             return string.Empty;
         }
 
-        public string PostData(Uri url, IEnumerable<KeyValuePair<string,string>> content)
+        public async Task<string> PostDataAsync(Uri url, IEnumerable<KeyValuePair<string,string>> content)
         {
             var httpContent = new FormUrlEncodedContent(content);
 
-            var httpResponse = _client.PostAsync(url, httpContent).Result;
+            var httpResponse = await _client.PostAsync(url, httpContent);
             if (httpResponse.Content != null)
             {
-                var responseContent = httpResponse.Content.ReadAsStringAsync().Result;
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
                 return responseContent;
             }
             return string.Empty;

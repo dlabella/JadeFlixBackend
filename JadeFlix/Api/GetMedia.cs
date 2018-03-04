@@ -4,6 +4,7 @@ using System.Net;
 using System.Linq;
 using Common;
 using JadeFlix.Domain.ApiParameters;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -20,10 +21,10 @@ namespace JadeFlix.Api
             };
         }
 
-        protected override string ProcessGetRequest(HttpListenerRequest request, GetMediaApiParameters parameters)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, GetMediaApiParameters parameters)
         {
             var scraper = AppContext.MediaScrapers.Get(parameters.ScraperId);
-            var urls = scraper.GetMediaUrls(new Uri(parameters.Url)).ToList();
+            var urls = (await scraper.GetMediaUrlsAsync(new Uri(parameters.Url))).ToList();
             return ToJson(urls);
         }
     }

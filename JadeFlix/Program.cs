@@ -86,6 +86,7 @@ namespace JadeFlix
             server.RegisterRequestHandler(new Api.FindItem(server.Cache));
             server.RegisterRequestHandler(new Api.Download(server.Cache));
             server.RegisterRequestHandler(new Api.BatchDownload(server.Cache));
+            server.RegisterRequestHandler(new Api.Session());
         }
 
         private static void SigTermEventHandler(AssemblyLoadContext obj)

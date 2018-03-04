@@ -3,6 +3,7 @@ using SimpleWebApiServer;
 using Newtonsoft.Json;
 using JadeFlix.Domain.ApiParameters;
 using System;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -10,17 +11,17 @@ namespace JadeFlix.Api
     {
         public FindItem(HttpListenerRequestCache cache = null) : base("api/findItem/{scraper}/{name}",cache) { }
         public override bool IsCacheable => false;
-        protected override string ProcessGetRequest(HttpListenerRequest request, FindItemApiParamters apiParamters)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, FindItemApiParamters apiParamters)
         {
             if (!apiParamters.AreValid)
             {
                 return string.Empty;
             }
 
-            var entries = 
+            var entries = await
                 AppContext.MediaScrapers
                 .Get(apiParamters.ScraperId)
-                .Find(apiParamters.Name);
+                .FindAsync(apiParamters.Name);
 
             return ToJson(entries);
         }

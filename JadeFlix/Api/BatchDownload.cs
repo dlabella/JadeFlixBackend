@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using JadeFlix.Domain;
 using JadeFlix.Domain.ApiParameters;
 using JadeFlix.Extensions;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -20,37 +21,30 @@ namespace JadeFlix.Api
         public BatchDownload(HttpListenerRequestCache cache = null) : base("api/batchDownload", cache) { }
         public override bool IsCacheable => false;
 
-        protected override string ProcessGetRequest(HttpListenerRequest request, BatchApiParams apiParams)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, BatchApiParams apiParams)
         {
             if (!apiParams.AreValid) return string.Empty;
 
-            BeginProcess(apiParams.Key);
+            var tvshow = await apiParams.Scraper.GetAsync(new Uri(apiParams.Url));
 
-            ThreadPool.QueueUserWorkItem(o =>
+            foreach (var item in tvshow.Media.Remote.OrderBy(x => x.Name.Length).ThenBy(y => y.Name))
             {
-                var threadKey = apiParams.Key;
-                var tvshow = apiParams.Scraper.Get(new Uri(apiParams.Url));
-
-                foreach (var item in tvshow.Media.Remote.OrderBy(x => x.Name.Length).ThenBy(y => y.Name))
+                if (!await CanEnqueueDownload(tvshow, item, apiParams))
                 {
-                    if (!CanEnqueueDownload(tvshow, item, apiParams))
-                    {
-                        continue;
-                    }
-                    if (!EnqueueDownload(apiParams, tvshow, item))
-                    {
-                        Thread.Sleep(3500);
-                    }
+                    continue;
                 }
+                if (!await EnqueueDownload(apiParams, tvshow, item))
+                {
+                    Thread.Sleep(3500);
+                }
+            }
 
-                EndProcess(threadKey);
-            });
             return ToJson(new { result = "OK", key = apiParams.Key.EncodeToBase64() });
         }
 
-        private bool CanEnqueueDownload(CatalogItem item, DownloadableNamedUri media, BatchApiParams parameters)
+        private async Task<bool> CanEnqueueDownload(CatalogItem item, DownloadableNamedUri media, BatchApiParams parameters)
         {
-            var local = AppContext.LocalScraper.Get(item.GroupName, item.KindName, item.Name);
+            var local = await AppContext.LocalScraper.GetAsync(item.GroupName, item.KindName, item.Name);
             if (local != null && local.Media.Local.Any(x => string.Compare(x.Name, media.GetFileName(), true) == 0))
             {
                 Logger.Debug("Skipping " + item.Name + " already in local");
@@ -59,13 +53,13 @@ namespace JadeFlix.Api
             return true;
         }
 
-        private static bool EnqueueDownload(BatchApiParams apiParams, CatalogItem tvshow, DownloadableNamedUri item)
+        private static async Task<bool> EnqueueDownload(BatchApiParams apiParams, CatalogItem tvshow, DownloadableNamedUri item)
         {
             Logger.Debug("Getting media urls of " + item.Name);
-            var mediaUrl = apiParams.Scraper.GetMediaUrls(item.Url).FirstOrDefault();
+            var mediaUrl = (await apiParams.Scraper.GetMediaUrlsAsync(item.Url)).FirstOrDefault();
             if (mediaUrl != null)
             {
-                var downloadUrl = apiParams.Scraper.GetMediaDownloadUrl(mediaUrl.Url);
+                var downloadUrl = await apiParams.Scraper.GetMediaDownloadUrlAsync(mediaUrl.Url);
                 var file = tvshow.GetMediaPath(item.GetFileName());
                 Logger.Debug("Enqueuing download: " + item.GetFileName());
                 AppContext.FileDownloader.Enqueue(item.UId, file, new Uri(downloadUrl), Web.CookieContainer);
@@ -74,20 +68,20 @@ namespace JadeFlix.Api
             return false;
         }
 
-        private void BeginProcess(string key)
-        {
-            _itemsProcessing.AddOrUpdate(key, key, (o, n) => key);
-        }
+        //private void BeginProcess(string key)
+        //{
+        //    _itemsProcessing.AddOrUpdate(key, key, (o, n) => key);
+        //}
 
-        private bool IsProcessStarted(string key)
-        {
-            return _itemsProcessing.ContainsKey(key);
-        }
+        //private bool IsProcessStarted(string key)
+        //{
+        //    return _itemsProcessing.ContainsKey(key);
+        //}
 
-        private void EndProcess(string key)
-        {
-            _itemsProcessing.TryRemove(key, out string val);
-        }
+        //private void EndProcess(string key)
+        //{
+        //    _itemsProcessing.TryRemove(key, out string val);
+        //}
 
         public override BatchApiParams ParseParameters(RequestParameters parameters)
         {

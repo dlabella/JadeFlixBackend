@@ -4,6 +4,7 @@ using System;
 using Common;
 using JadeFlix.Domain.ApiParameters;
 using JadeFlix.Domain;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -11,7 +12,7 @@ namespace JadeFlix.Api
     {
         public GetItem(HttpListenerRequestCache cache = null) : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}", cache) { }
 
-        protected override string ProcessGetRequest(HttpListenerRequest request, GetItemApiParameters apiParams)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, GetItemApiParameters apiParams)
         {
             if (!apiParams.AreValid)
             {
@@ -20,7 +21,7 @@ namespace JadeFlix.Api
             Console.WriteLine("Item Name: " + apiParams.Name);
 
             var scraper = AppContext.MediaScrapers.Get(apiParams.ScraperId);
-            var localEntry = AppContext.LocalScraper.Get(apiParams.Group, apiParams.Kind, apiParams.Name);
+            var localEntry = await AppContext.LocalScraper.GetAsync(apiParams.Group, apiParams.Kind, apiParams.Name);
 
             if (apiParams.OnlyLocal || scraper == null)
             {
@@ -29,32 +30,32 @@ namespace JadeFlix.Api
             }
             else
             {
-                var item = ProcessCatalogItem(apiParams, scraper, localEntry);
+                var item = await ProcessCatalogItem(apiParams, scraper, localEntry);
                 return ToJson(item);
             }
         }
 
-        private CatalogItem ProcessCatalogItem(GetItemApiParameters apiParams, MediaScraper scraper, CatalogItem local)
+        private async Task<CatalogItem> ProcessCatalogItem(GetItemApiParameters apiParams, MediaScraper scraper, CatalogItem local)
         {
-            var entry = scraper.Get(new Uri(apiParams.Url));
+            var entry = await scraper.GetAsync(new Uri(apiParams.Url));
             if (local != null)
             {
                 entry.Watching = local.Watching;
             }
             AppContext.LocalScraper.SetLocalMedia(entry);
 
-            SyncEntries(local, entry);
+            await SyncEntries(local, entry);
 
             return entry;
         }
 
-        private void SyncEntries(CatalogItem local, CatalogItem remote)
+        private async Task SyncEntries(CatalogItem local, CatalogItem remote)
         {
             if (AppContext.LocalScraper.Compare(local, remote) != 0)
             {
                 AppContext.LocalScraper.SaveImagesToLocal(remote);
                 AppContext.LocalScraper.SetLocalImages(remote);
-                AppContext.LocalScraper.Save(remote);
+                await AppContext.LocalScraper.SaveAsync(remote);
             }
         }
         public override GetItemApiParameters ParseParameters(RequestParameters parameters)

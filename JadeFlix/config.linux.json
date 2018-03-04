@@ -1,6 +1,6 @@
 ﻿{
   "FilesCachePath": "/nas/hd1/jadeflix/cache",
-  "WwwCachePath": "https://jadecloud.xyz/jadeflix/cache",
+  "WwwCachePath": "//jadecloud.xyz/jadeflix/cache",
   "MediaPath": "/nas/hd1/jadeflix/media",
-  "WwwMediaPath": "https://jadecloud.xyz/jadeflix/media"
+  "WwwMediaPath": "//jadecloud.xyz/jadeflix/media"
 }

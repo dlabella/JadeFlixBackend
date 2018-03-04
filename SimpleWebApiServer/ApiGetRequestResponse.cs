@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SimpleWebApiServer
 {
@@ -12,11 +13,10 @@ namespace SimpleWebApiServer
         {
         }
         public override string HttpMethod => "GET";
-        protected override string ProcessPostRequest(HttpListenerRequest request, TParams parameters, string postData)
+        protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, TParams parameters, string postData)
         {
+            await Task.Delay(10);
             throw new NotSupportedException();
         }
-
-        
     }
 }

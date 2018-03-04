@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SimpleWebApiServer
 {
@@ -25,11 +26,11 @@ namespace SimpleWebApiServer
             _nonCacheableRequest.Add(nonCacheableRequest.ToLower());
         }
 
-        public string GetRequest(HttpListenerRequest request, Func<HttpListenerRequest, string> handleRequest)
+        public async Task<string> GetRequest(HttpListenerRequest request, Func<HttpListenerRequest, Task<string>> handleRequest)
         {
             if (IsNonCacheableRequest(request.RawUrl)||request.RawUrl.Contains("&nocache=true"))
             {
-                return handleRequest(request);
+                return await handleRequest(request);
             }
 
             var dictKey = (request.RawUrl).GetHashCode();
@@ -40,7 +41,7 @@ namespace SimpleWebApiServer
                 Logger.Debug("Content served from cache");
                 return result;
             }
-            result = handleRequest(request);
+            result = await handleRequest(request);
             SetValue(dictKey,request.Url.ToString(), result);
             return result;
         }
@@ -111,7 +112,6 @@ namespace SimpleWebApiServer
         {
             _cache.Clear();
         }
-
 
         private void SetValue(int key,string source, string value)
         {

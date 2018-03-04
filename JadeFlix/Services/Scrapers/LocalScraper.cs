@@ -8,6 +8,7 @@ using System.Linq;
 using static JadeFlix.Domain.Enums;
 using Common.Logging;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Services.Scrapers
 {
@@ -22,7 +23,7 @@ namespace JadeFlix.Services.Scrapers
         private static List<string> MediaExtensions = new List<string>(){
             ".AVI", ".MP4", ".DIVX", ".WMV",
         };
-        public void Save(CatalogItem entry)
+        public async Task SaveAsync(CatalogItem entry)
         {
             try
             {
@@ -33,7 +34,7 @@ namespace JadeFlix.Services.Scrapers
                     Directory.CreateDirectory(finfo.Directory.FullName);
                 }
                 var tvshowJson = JsonConvert.SerializeObject(entry);
-                File.WriteAllText(path, tvshowJson);
+                await File.WriteAllTextAsync(path, tvshowJson);
             }
             catch (Exception ex)
             {
@@ -85,16 +86,16 @@ namespace JadeFlix.Services.Scrapers
             return 0;
         }
 
-        public CatalogItem Get(string groupName, string kindName, string name)
+        public async Task<CatalogItem> GetAsync(string groupName, string kindName, string name)
         {
-            var item = Load(groupName, kindName, name);
+            var item = await Load(groupName, kindName, name);
 
             if (string.IsNullOrEmpty(item.ScrapedBy))
             {
                 item.ScrapedBy = "Local";
             }
 
-            SetLocalPlot(item);
+            await SetLocalPlot(item);
 
             SetLocalImages(item);
 
@@ -103,7 +104,7 @@ namespace JadeFlix.Services.Scrapers
             return item;
         }
 
-        public List<CatalogItem> GetItems(string group, string kind)
+        public async Task<List<CatalogItem>> GetItemsAsync(string group, string kind)
         {
             var items = new List<CatalogItem>();
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind);
@@ -115,7 +116,7 @@ namespace JadeFlix.Services.Scrapers
                 ProcessFixes(directory);
 
                 Logger.Debug("Loading: " + directory.Name);
-                var item = Get(group, kind, directory.Name);
+                var item = await GetAsync(group, kind, directory.Name);
                 if (item != null && (item.Media.Local.Count > 0 || item.Watching))
                 {
                     items.Add(item);
@@ -130,14 +131,14 @@ namespace JadeFlix.Services.Scrapers
             Fixes.RemoveNonParseableJsons.Apply(dir);
         }
 
-        public CatalogItem Load(string groupName, string kindName, string name)
+        public async Task<CatalogItem> Load(string groupName, string kindName, string name)
         {
             var data = GetDataFile(groupName, kindName, name);
             if (File.Exists(data))
             {
                 try
                 {
-                    var jsonData = File.ReadAllText(data);
+                    var jsonData = await File.ReadAllTextAsync(data);
                     if (jsonData != null)
                     {
                         var item = JsonConvert.DeserializeObject<CatalogItem>(jsonData);
@@ -162,7 +163,7 @@ namespace JadeFlix.Services.Scrapers
             return newItem;
         }
 
-        private string GetDataFile(CatalogItem item)
+        private string GetDataFileAsync(CatalogItem item)
         {
             return GetDataFile(item.GroupName, item.KindName, item.Name);
         }
@@ -352,13 +353,13 @@ namespace JadeFlix.Services.Scrapers
             item.Poster = wwwpath + "/poster.jpg";
         }
 
-        public void SetLocalPlot(CatalogItem item)
+        public async Task SetLocalPlot(CatalogItem item)
         {
             var path = GetMediaPath(item);
             var plotFile = Path.Combine(path, "plot.txt");
             if (File.Exists(plotFile))
             {
-                item.Plot = File.ReadAllText(plotFile);
+                item.Plot = await File.ReadAllTextAsync(plotFile);
             }
         }
 

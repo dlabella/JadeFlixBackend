@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading.Tasks;
 
 namespace SimpleWebApiServer.Interfaces
 {
@@ -9,8 +10,8 @@ namespace SimpleWebApiServer.Interfaces
         bool IsCacheable { get; }
         string UrlPattern { get; }
 
-        string GetRequest(HttpListenerRequest request, RequestParameters parameters);
-        string PostRequest(HttpListenerRequest request, RequestParameters parameters, string postData);
+        Task<string> GetRequestAsync(HttpListenerRequest request, RequestParameters parameters);
+        Task<string> PostRequestAsync(HttpListenerRequest request, RequestParameters parameters, string postData);
 
         string ToJson(object obj);
         T FromJson<T>(string json);

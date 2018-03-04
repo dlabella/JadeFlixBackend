@@ -1,6 +1,7 @@
 ﻿using JadeFlix.Services;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static JadeFlix.Domain.Enums;
 
 namespace JadeFlix.Domain
@@ -26,27 +27,26 @@ namespace JadeFlix.Domain
         public Uri BaseUrl { get; internal set; }
         public EntryType Kind { get; internal set; }
         public string KindName { get { return Kind.ToString(); } }
-        protected string GetContents(Uri url)
+        protected async Task<string> GetContentsAsync(Uri url)
         {
             if (_contentCache != null)
             {
-                return _contentCache.GetOrAdd(url.ToString(), () => AppContext.Web.Get(url));
+                var data = _contentCache.GetOrAdd(url.ToString(), () => { return string.Empty; });
+                if (data == string.Empty)
+                {
+                    data = await AppContext.Web.GetAsync(url);
+                    _contentCache.AddOrUpdate(url.ToString(), data);
+                }
+                return data;
             }
-            return AppContext.Web.Get(url);
+            return await AppContext.Web.GetAsync(url);
         }
-        //protected string PostJson(Uri url, string content)
-        //{
-        //    if (_contentCache != null)
-        //    {
-        //        return _contentCache.GetOrAdd(url.ToString(), () => AppContext.Web.PostJson(url, content));
-        //    }
-        //    return AppContext.Web.PostJson(url,content);
-        //}
-        public abstract IEnumerable<NamedUri> GetMediaUrls(Uri url);
-        public abstract CatalogItem Get(Uri url);
-        public abstract List<CatalogItem> Find(string name);
-        public abstract List<CatalogItem> GetRecent();
-        public abstract string GetMediaDownloadUrl(Uri url);
+
+        public abstract Task<IEnumerable<NamedUri>> GetMediaUrlsAsync(Uri url);
+        public abstract Task<CatalogItem> GetAsync(Uri url);
+        public abstract Task<List<CatalogItem>> FindAsync(string name);
+        public abstract Task<List<CatalogItem>> GetRecentAsync();
+        public abstract Task<string> GetMediaDownloadUrlAsync(Uri url);
         public string ConcatToBaseUrl(string partialUrl)
         {
             return BaseUrl.ToString().TrimEnd('/') + "/" + partialUrl.TrimStart('/');

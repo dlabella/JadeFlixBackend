@@ -15,7 +15,7 @@ namespace JadeFlix.Services
 {
     public class DownloadManager
     {
-        private Queue<DownloadInfo> _queue = new Queue<DownloadInfo>();
+        private ConcurrentQueue<DownloadInfo> _queue = new ConcurrentQueue<DownloadInfo>();
 
         private static ConcurrentDictionary<string, DownloadInfo> _activeDownloads = new ConcurrentDictionary<string, DownloadInfo>();
 
@@ -71,7 +71,7 @@ namespace JadeFlix.Services
         {
             if (_queue.Count > 0)
             {
-                var item = _queue.Dequeue();
+                _queue.TryDequeue(out DownloadInfo item);
                 item.IsQueued = false;
                 return item;
             }

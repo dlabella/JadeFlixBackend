@@ -2,6 +2,7 @@
 using SimpleWebApiServer;
 using System.Diagnostics;
 using JadeFlix.Domain.ApiParameters;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -20,10 +21,10 @@ namespace JadeFlix.Api
             };
         }
 
-        protected override string ProcessGetRequest(HttpListenerRequest request, GetRecentApiParameters parameters)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, GetRecentApiParameters parameters)
         {
             var scraper = AppContext.MediaScrapers.Get(parameters.ScraperId);
-            var data = scraper.GetRecent();
+            var data = await scraper.GetRecentAsync();
             Trace.WriteLine($"Item count: {data?.Count}");
             return ToJson(data);
         }

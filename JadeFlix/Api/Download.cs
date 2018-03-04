@@ -6,6 +6,7 @@ using Common;
 using System.IO;
 using Common.Logging;
 using JadeFlix.Domain.ApiParameters;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -13,7 +14,7 @@ namespace JadeFlix.Api
     {
         public Download(HttpListenerRequestCache cache = null) : base("api/download", cache) { }
         public override bool IsCacheable => false;
-        protected override string ProcessGetRequest(HttpListenerRequest request, DownloadApiParameters apiParams)
+        protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, DownloadApiParameters apiParams)
         {
             if (!apiParams.AreValid)
             {
@@ -23,7 +24,7 @@ namespace JadeFlix.Api
             Logger.Debug($"Equeuing download Name {apiParams.FiletPath.ToSafePath()} Url:{apiParams.Url}");
 
             AppContext.FileDownloader.Enqueue(apiParams.Id, apiParams.FiletPath.ToSafePath(), new Uri(apiParams.Url), Web.CookieContainer);
-
+            await Task.Delay(10);
             return ToJson(new { status = 200 });
         }
         public override DownloadApiParameters ParseParameters(RequestParameters parameters)

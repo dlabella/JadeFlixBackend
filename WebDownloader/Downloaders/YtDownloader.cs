@@ -40,25 +40,32 @@ namespace WebDownloader.Downloaders
         {
 
             string outputFilePath = filePath.ToSafePath();
-
             var downloadInfo = new YtDownloadInfo(id, outputFilePath, url, cookies, disableTracking, downloadChanged, downloadCompleted);
-
-            PrepareOutputDirectory(outputFilePath);
-
-            Sys.RunProcess(
-                _bin,
-                downloadInfo.GetCommadArguments(),
-                true,
-                (data) => HandleDownloadFeedback(data, downloadInfo),
-                (error) => HandleDownloadError(error),
-                (exitCode) => HandleDownloadCompleted(exitCode, downloadInfo));
-        }
-        private void PrepareOutputDirectory(string filePath)
-        {
-            var finfo = new FileInfo(filePath);
-            if (!finfo.Exists)
+            if (PrepareOutputDirectory(outputFilePath))
             {
-                finfo.Directory.Create();
+                Sys.RunProcess(
+                    _bin,
+                    downloadInfo.GetCommadArguments(),
+                    true,
+                    (data) => HandleDownloadFeedback(data, downloadInfo),
+                    (error) => HandleDownloadError(error),
+                    (exitCode) => HandleDownloadCompleted(exitCode, downloadInfo));
+            }
+        }
+        private bool PrepareOutputDirectory(string filePath)
+        {
+            try
+            {
+                var finfo = new FileInfo(filePath);
+                if (!finfo.Exists)
+                {
+                    finfo.Directory.Create();
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 

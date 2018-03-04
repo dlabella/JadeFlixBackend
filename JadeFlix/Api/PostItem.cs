@@ -5,6 +5,7 @@ using JadeFlix.Domain;
 using System.Linq;
 using Common.Logging;
 using JadeFlix.Domain.ApiParameters;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
@@ -12,12 +13,12 @@ namespace JadeFlix.Api
     {
         public PostItem(HttpListenerRequestCache cache = null) : base("api/postItem", cache) { }
 
-        protected override string ProcessPostRequest(HttpListenerRequest request, EmptyApiParameters parameters, string postData)
+        protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, EmptyApiParameters parameters, string postData)
         {
             var item = FromJson<CatalogItem>(postData);
             if (item != null)
             {
-                AppContext.LocalScraper.Save(item);
+                await AppContext.LocalScraper.SaveAsync(item);
                 UpdateCacheEntries(item);
 
                 return ToJson(new { status = "ok" });

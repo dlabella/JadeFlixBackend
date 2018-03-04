@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SimpleWebApiServer
 {
@@ -44,18 +45,18 @@ namespace SimpleWebApiServer
             return StripPatternFromUrl(url.ToString());
         }
         public virtual bool IsCacheable => true;
-        public string GetRequest(HttpListenerRequest request, RequestParameters parameters)
+        public async Task<string> GetRequestAsync(HttpListenerRequest request, RequestParameters parameters)
         {
             var qryParams = ParseParameters(parameters);
-            return ProcessGetRequest(request, qryParams);
+            return await ProcessGetRequest(request, qryParams);
         }
-        protected abstract string ProcessGetRequest(HttpListenerRequest request, TParams parameters);
-        public string PostRequest(HttpListenerRequest request, RequestParameters parameters,string postData)
+        protected abstract Task<string> ProcessGetRequest(HttpListenerRequest request, TParams parameters);
+        public async Task<string> PostRequestAsync(HttpListenerRequest request, RequestParameters parameters,string postData)
         {
             var qryParams = ParseParameters(parameters);
-            return ProcessPostRequest(request, qryParams, postData);
+            return await ProcessPostRequest(request, qryParams, postData);
         }
-        protected abstract string ProcessPostRequest(HttpListenerRequest request, TParams parameters, string postData);
+        protected abstract Task<string> ProcessPostRequest(HttpListenerRequest request, TParams parameters, string postData);
         public HttpListenerRequestCache Cache { get; set; }
 
         public string ToJson(object obj)
