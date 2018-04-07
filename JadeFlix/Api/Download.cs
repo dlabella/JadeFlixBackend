@@ -12,7 +12,7 @@ namespace JadeFlix.Api
 {
     public class Download : ApiGetRequestResponse<DownloadApiParameters>
     {
-        public Download(HttpListenerRequestCache cache = null) : base("api/download", cache) { }
+        public Download(HttpListenerRequestCache cache = null) : base("/api/download", cache) { }
         public override bool IsCacheable => false;
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, DownloadApiParameters apiParams)
         {

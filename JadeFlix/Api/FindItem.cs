@@ -9,7 +9,7 @@ namespace JadeFlix.Api
 {
     public class FindItem : ApiGetRequestResponse<FindItemApiParamters>
     {
-        public FindItem(HttpListenerRequestCache cache = null) : base("api/findItem/{scraper}/{name}",cache) { }
+        public FindItem(HttpListenerRequestCache cache = null) : base("/api/findItem/{scraper}/{name}",cache) { }
         public override bool IsCacheable => false;
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, FindItemApiParamters apiParamters)
         {

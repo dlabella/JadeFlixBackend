@@ -1,43 +1,46 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
 using System;
-using JadeFlix.Services;
-using Common;
-using System.IO;
-using System.Linq;
-using Common.Logging;
-using System.Threading;
 using System.Collections.Concurrent;
 using JadeFlix.Domain;
 using JadeFlix.Domain.ApiParameters;
-using JadeFlix.Extensions;
 using System.Threading.Tasks;
 
 namespace JadeFlix.Api
 {
-    public class Session : ApiGetRequestResponse<SessionApiParams>
+    public class Session : ApiRequestResponse<SessionApiParams>
     {
         public static ConcurrentDictionary<string, string> _session = new ConcurrentDictionary<string, string>();
-        public Session(HttpListenerRequest cache = null) : base("api/session") { }
+        public Session(HttpListenerRequest cache = null) : base("/api/session") { }
         public override bool IsCacheable => false;
+
+        public override string HttpMethod => "GET|POST";
 
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, SessionApiParams apiParams)
         {
             var sessionKey = GetSessionKey(apiParams.SessionId, request, apiParams.Key);
             var sessionResponse = new SessionResponse();
 
-            if (string.IsNullOrEmpty(apiParams.Value))
+            sessionResponse = GetSessionValue(apiParams, sessionKey);
+
+            await Task.Delay(10);
+            if (sessionResponse.Result == null)
             {
-                sessionResponse = GetSessionValue(apiParams, sessionKey);
+                return string.Empty;
             }
-            else
-            {
-                sessionResponse = SetSessionValue(apiParams, sessionKey);
-            }
+            return ToJson(sessionResponse);
+        }
+        protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, SessionApiParams apiParams, string postData)
+        {
+            var sessionKey = GetSessionKey(apiParams.SessionId, request, apiParams.Key);
+            var sessionResponse = new SessionResponse();
+            apiParams.Value = postData;
+
+            sessionResponse = SetSessionValue(apiParams, sessionKey);
+
             await Task.Delay(10);
             return ToJson(sessionResponse);
         }
-
         private static SessionResponse SetSessionValue(SessionApiParams apiParams, string sessionKey)
         {
             var sessionResponse = new SessionResponse();
@@ -77,6 +80,8 @@ namespace JadeFlix.Api
                 Value = parameters.GetQueryParameter("value")
             };
         }
+
+        
     }
 
 }

@@ -18,7 +18,7 @@ namespace JadeFlix.Api
     public class BatchDownload : ApiGetRequestResponse<BatchApiParams>
     {
         public static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
-        public BatchDownload(HttpListenerRequestCache cache = null) : base("api/batchDownload", cache) { }
+        public BatchDownload(HttpListenerRequestCache cache = null) : base("/api/batchDownload", cache) { }
         public override bool IsCacheable => false;
 
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, BatchApiParams apiParams)
@@ -67,21 +67,6 @@ namespace JadeFlix.Api
             }
             return false;
         }
-
-        //private void BeginProcess(string key)
-        //{
-        //    _itemsProcessing.AddOrUpdate(key, key, (o, n) => key);
-        //}
-
-        //private bool IsProcessStarted(string key)
-        //{
-        //    return _itemsProcessing.ContainsKey(key);
-        //}
-
-        //private void EndProcess(string key)
-        //{
-        //    _itemsProcessing.TryRemove(key, out string val);
-        //}
 
         public override BatchApiParams ParseParameters(RequestParameters parameters)
         {

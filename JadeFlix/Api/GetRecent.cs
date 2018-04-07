@@ -8,7 +8,7 @@ namespace JadeFlix.Api
 {
     public class GetRecent : ApiGetRequestResponse<GetRecentApiParameters>
     {
-        public GetRecent(HttpListenerRequestCache cache=null) : base("api/getRecent/{scraper}",cache)
+        public GetRecent(HttpListenerRequestCache cache=null) : base("/api/getRecent/{scraper}",cache)
         {
             
         }

@@ -11,7 +11,7 @@ namespace JadeFlix.Api
 {
     public class GetMediaUrl : ApiGetRequestResponse<GetMediaApiParameters>
     {
-        public GetMediaUrl(HttpListenerRequestCache cache = null) : base("api/getmediaurl/{scraper}/{media_uid}", cache) { }
+        public GetMediaUrl(HttpListenerRequestCache cache = null) : base("/api/getmediaurl/{scraper}/{media_uid}", cache) { }
 
         public override GetMediaApiParameters ParseParameters(RequestParameters parameters)
         {

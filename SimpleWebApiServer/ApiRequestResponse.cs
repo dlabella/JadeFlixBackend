@@ -61,6 +61,9 @@ namespace SimpleWebApiServer
 
         public string ToJson(object obj)
         {
+            if (obj==null) {
+                return string.Empty;
+            }
             return JsonConvert.SerializeObject(obj);
         }
 

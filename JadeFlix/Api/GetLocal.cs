@@ -8,7 +8,7 @@ namespace JadeFlix.Api
 {
     public class GetLocal : ApiGetRequestResponse<GetLocalApiParameters>
     {
-        public GetLocal(HttpListenerRequestCache cache = null) : base("api/getLocal/{group}/{kind}",cache)
+        public GetLocal(HttpListenerRequestCache cache = null) : base("/api/getLocal/{group}/{kind}",cache)
         {
             
         }

@@ -7,7 +7,7 @@ namespace JadeFlix.Api
 {
     public class GetDownloads : ApiGetRequestResponse<EmptyApiParameters>
     {
-        public GetDownloads(HttpListenerRequestCache cache = null) : base("api/getDownloads",cache){}
+        public GetDownloads(HttpListenerRequestCache cache = null) : base("/api/getDownloads",cache){}
 
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, EmptyApiParameters parameters)
         {

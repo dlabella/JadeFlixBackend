@@ -10,7 +10,7 @@ namespace JadeFlix.Api
 {
     public class GetItem : ApiGetRequestResponse<GetItemApiParameters>
     {
-        public GetItem(HttpListenerRequestCache cache = null) : base("api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}", cache) { }
+        public GetItem(HttpListenerRequestCache cache = null) : base("/api/getItem/{scraper}/{group}/{kind}/{nid}/{uid}", cache) { }
 
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, GetItemApiParameters apiParams)
         {

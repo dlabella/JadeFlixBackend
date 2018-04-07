@@ -16,8 +16,10 @@ namespace SimpleWebApiServer
         List<CachedItem> _cache = new List<CachedItem>(_cacheSize);
         List<string> _nonCacheableRequest = new List<string>();
         DateTime _expectedNextCacheClean;
-        public HttpListenerRequestCache()
+        public string BasePath { get;}
+        public HttpListenerRequestCache(string basePath)
         {
+            BasePath = basePath;
             _expectedNextCacheClean = DateTime.Now;
         }
 
@@ -28,7 +30,8 @@ namespace SimpleWebApiServer
 
         public async Task<string> GetRequest(HttpListenerRequest request, Func<HttpListenerRequest, Task<string>> handleRequest)
         {
-            if (IsNonCacheableRequest(request.RawUrl)||request.RawUrl.Contains("&nocache=true"))
+            var bypassCache = (request.QueryString.Get("nocache")?.ToLower()=="true");
+            if (IsNonCacheableRequest(request.Url.LocalPath) || bypassCache)
             {
                 return await handleRequest(request);
             }
@@ -36,7 +39,7 @@ namespace SimpleWebApiServer
             var dictKey = (request.RawUrl).GetHashCode();
 
             var result = GetValue(dictKey);
-            if (result != default(string))
+            if (!string.IsNullOrEmpty(result))
             {
                 Logger.Debug("Content served from cache");
                 return result;
@@ -47,15 +50,8 @@ namespace SimpleWebApiServer
         }
         private bool IsNonCacheableRequest(string requestUrl)
         {
-            var request = requestUrl.ToLower();
-            foreach (var exclusion in _nonCacheableRequest)
-            {
-                if (request.Contains(exclusion))
-                {
-                    return true;
-                }
-            }
-            return false;
+            var request = requestUrl.ToLower().Replace(BasePath,"");
+            return _nonCacheableRequest.Any(x => x.Contains(request));
         }
         public IEnumerable<CachedItem> TryGetCachedItem(string sourceFilter)
         {

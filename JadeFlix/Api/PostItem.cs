@@ -11,7 +11,7 @@ namespace JadeFlix.Api
 {
     public class PostItem : ApiPostRequestResponse<EmptyApiParameters>
     {
-        public PostItem(HttpListenerRequestCache cache = null) : base("api/postItem", cache) { }
+        public PostItem(HttpListenerRequestCache cache = null) : base("/api/postItem", cache) { }
 
         protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, EmptyApiParameters parameters, string postData)
         {
