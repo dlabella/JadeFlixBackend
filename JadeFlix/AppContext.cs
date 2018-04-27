@@ -1,8 +1,6 @@
 ﻿using JadeFlix.Domain;
 using JadeFlix.Services;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using JadeFlix.Services.Scrapers;
 
 namespace JadeFlix
 {
@@ -12,7 +10,7 @@ namespace JadeFlix
         public static Web Web;
         public static DownloadManager FileDownloader;
         public static Configuration Config;
-        public static JadeFlix.Services.Scrapers.LocalScraper LocalScraper;
+        public static LocalScraper LocalScraper;
         public static void Initialize()
         {
             Config = Configuration.Load();
