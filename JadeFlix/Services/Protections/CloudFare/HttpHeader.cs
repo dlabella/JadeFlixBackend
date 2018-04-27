@@ -1,4 +1,4 @@
-﻿namespace CloudFlareUtilities
+﻿namespace Jadeflix.Services.Protections.CloudFare
 {
     internal static class HttpHeader
     {

@@ -4,7 +4,6 @@ using Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using WebDownloader.Domain;
 using WebDownloader.Domain.EventHandlers;
 using WebDownloader.Services;
@@ -13,19 +12,11 @@ namespace WebDownloader.Downloaders
 {
     public class YtDownloader : Downloader
     {
-        string _bin;
-        YtDownloadInfoParser _parser;
+        private readonly string _bin;
+        private readonly YtDownloadInfoParser _parser;
         public YtDownloader() : base("youtube-dl")
         {
-            var bin = string.Empty;
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                _bin = @"C:\usr\bin\youtube-dl.exe";
-            }
-            else
-            {
-                _bin = @"/usr/local/bin/youtube-dl";
-            }
+            _bin = Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\youtube-dl.exe" : @"/usr/local/bin/youtube-dl";
             _parser = new YtDownloadInfoParser();
         }
 
@@ -59,7 +50,7 @@ namespace WebDownloader.Downloaders
                 var finfo = new FileInfo(filePath);
                 if (!finfo.Exists)
                 {
-                    finfo.Directory.Create();
+                    finfo.Directory?.Create();
                 }
                 return true;
             }
@@ -86,8 +77,8 @@ namespace WebDownloader.Downloaders
         private void HandleDownloadCompleted(int exitCode, YtDownloadInfo downloadInfo)
         {
             var di = new DownloadInfo(downloadInfo.Id, downloadInfo.OutputFile, downloadInfo.Url);
-            FileInfo finfo = new FileInfo(downloadInfo.OutputFile);
-            if (finfo != null && finfo.Exists)
+            var finfo = new FileInfo(downloadInfo.OutputFile);
+            if (finfo.Exists)
             {
                 di.BytesTotal = (int)finfo.Length;
                 di.BytesReceived = di.BytesTotal;

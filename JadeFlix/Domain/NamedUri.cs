@@ -1,8 +1,7 @@
 ﻿using Common;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using static System.String;
 
 namespace JadeFlix.Domain
 {
@@ -26,14 +25,13 @@ namespace JadeFlix.Domain
         public Uri Url { get; set; }
         [JsonProperty("uId")]
 
-        public string UId { get { return Url?.ToString().EncodeToBase64(); } }
+        public string UId => Url?.ToString().EncodeToBase64();
 
         public int CompareTo(object obj)
         {
-            var other = obj as NamedUri;
-            if (other != null)
+            if (obj is NamedUri other)
             {
-                return this.Name.CompareTo(other.Name);
+                return Compare(Name, other.Name, StringComparison.Ordinal);
             }
             else
             {

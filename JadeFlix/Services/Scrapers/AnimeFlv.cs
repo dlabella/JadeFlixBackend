@@ -17,13 +17,9 @@ namespace JadeFlix.Services.Scrapers
         }
         public override async Task<List<CatalogItem>> GetRecentAsync()
         {
-            Logger.Debug("[" + this.Name + "] Gettinge recent TvShows");
+            Logger.Debug("[" + Name + "] Gettinge recent TvShows");
 
-            List<CatalogItem> entries = new List<CatalogItem>();
-
-            var contents = string.Empty;
-
-            contents = await GetContentsAsync(BaseUrl);
+            var contents = await GetContentsAsync(BaseUrl);
             var items = contents.Between("ListEpisodios AX", "</ul>");
             var catalogItems = (await ParseListItems(items)).Where( x=> x!=null && !string.IsNullOrEmpty(x.Name)).ToList();
             return catalogItems;
@@ -39,7 +35,7 @@ namespace JadeFlix.Services.Scrapers
             entry.Poster = ConcatToBaseUrl(content.Between("class=\"AnimeCover\"", "</figure>").Between("<img src=\"", "\""));
             entry.Name = content.Between("<h2 class=\"Title\">", "<");
             entry.Plot = content.Between("<div class=\"Description\">", "</div>").Between("<p>", "</p>");
-            entry.ScrapedBy = this.Name;
+            entry.ScrapedBy = Name;
 
             var episodeList = content.Between("<ul class=\"ListCaps\"", "</ul>");
             if (string.IsNullOrWhiteSpace(episodeList))
@@ -47,11 +43,10 @@ namespace JadeFlix.Services.Scrapers
                 episodeList = content.Between("<ul class=\"ListEpisodes\"", "</ul>");
             }
             var idx = 0;
-            string episode = string.Empty;
             var episodes = new Dictionary<int, DownloadableNamedUri>();
             do
             {
-                episode = episodeList.Between("<li", "</li>", ref idx);
+                var episode = episodeList.Between("<li", "</li>", ref idx);
                 var media = GetTvShowEpisode(episode);
 
                 if (media.Value != null && !episodes.ContainsKey(media.Key))
@@ -68,9 +63,9 @@ namespace JadeFlix.Services.Scrapers
 
         private async Task DigestCatalogItem(CatalogItem item)
         {
-            item.Poster = AppContext.LocalScraper.GetOrAddItemPoster(item, item.Poster);
-            item.Banner = AppContext.LocalScraper.GetOrAddItemBanner(item, item.Banner);
-            item.Preview = AppContext.LocalScraper.GetOrAddItemBanner(item, item.Preview);
+            item.Poster = LocalScraper.GetOrAddItemPoster(item, item.Poster);
+            item.Banner = LocalScraper.GetOrAddItemBanner(item, item.Banner);
+            item.Preview = LocalScraper.GetOrAddItemBanner(item, item.Preview);
             var local = await AppContext.LocalScraper.GetAsync(item.GroupName, item.KindName, item.Name);
             if (local != null)
             {
@@ -101,7 +96,7 @@ namespace JadeFlix.Services.Scrapers
             }
             else
             {
-                var startIdx = media.Url.ToString().LastIndexOf("-");
+                var startIdx = media.Url.ToString().LastIndexOf("-", StringComparison.Ordinal);
                 if (startIdx > 0)
                 {
                     startIdx++;
@@ -121,7 +116,7 @@ namespace JadeFlix.Services.Scrapers
             var mediaUrls = new List<NamedUri>();
             do
             {
-                var videoUrl = string.Empty;
+                string videoUrl;
                 if (videoIdx == 0 && options.Contains("window.open(\""))
                 {
                     videoUrl = options.Between("window.open(\"", "\"", ref videoIdx);
@@ -207,14 +202,6 @@ namespace JadeFlix.Services.Scrapers
             return videoUrl;
         }
 
-        private async Task<string> GetStreamAndGoVideoUrl(string content)
-        {
-            var contentVideo = content.Between("og:url\" content=\"", "\"");
-            var videoHtml = await GetContentsAsync(new Uri(contentVideo));
-            var videoUrl = videoHtml.Between("<video", "</video>").Between("<source src=\"", "\"");
-            return videoUrl;
-        }
-
         private async Task<IEnumerable<CatalogItem>> ParseListItems(string contents)
         {
             if (string.IsNullOrEmpty(contents)) return null;
@@ -233,12 +220,10 @@ namespace JadeFlix.Services.Scrapers
 
         private async Task<CatalogItem> ParseListItem(string content)
         {
-            bool digest = true;
             if (string.IsNullOrEmpty(content)) return null;
-            CatalogItem item = new CatalogItem();
-            item.ScrapedBy = this.Name;
+            var item = new CatalogItem {ScrapedBy = Name};
 
-            string url = content.Between("<a href=\"", "\"").Replace("/ver/", "/anime/");
+            var url = content.Between("<a href=\"", "\"").Replace("/ver/", "/anime/");
             
             
             item.Group = EntryGroup.Anime;
@@ -246,7 +231,7 @@ namespace JadeFlix.Services.Scrapers
             item.Preview = item.Banner;
             item.Kind = GetItemType(content);
             item.Name = content.Between("Title\">", "<");
-            item.Poster = AppContext.LocalScraper.GetItemPoster(item, item.Poster);
+            item.Poster = LocalScraper.GetItemPoster(item, item.Poster);
 
             FillCustomProperties(item, content);
 
@@ -264,10 +249,8 @@ namespace JadeFlix.Services.Scrapers
                 item.Id = url.Substring(start);
             }
 
-            if (digest)
-            {
-                await DigestCatalogItem(item);
-            }
+            await DigestCatalogItem(item);
+
             return item;
         }
         private bool ItemHasEpisodes(CatalogItem item)

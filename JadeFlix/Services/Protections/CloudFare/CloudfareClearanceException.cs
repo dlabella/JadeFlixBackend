@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 
-namespace CloudFlareUtilities
+namespace Jadeflix.Services.Protections.CloudFare
 {
     /// <summary>
     /// The exception that is thrown if CloudFlare clearance failed after the declared number of attempts.

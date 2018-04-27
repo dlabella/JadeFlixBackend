@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Diagnostics;
 using System;
 using Common.Logging;
@@ -62,22 +61,21 @@ namespace SimpleWebApiServer
 
         private async Task<string> HandleRequest(HttpListenerRequest request)
         {
-            string postData = string.Empty;
             foreach (var requestHandler in _requestHandlers.Where(x => x.HttpMethod.Contains(request.HttpMethod)))
             {
                 var path = JoinUrlPath(_urlPrefix, requestHandler.UrlPattern);
-                if (_urlParser.PatternMatch(request.Url.ToString(), path))
+                if (!_urlParser.PatternMatch(request.Url.ToString(), path))
                 {
-                    var requestParameters = GetRequestParameters(request, path);
-                    if (request.HttpMethod == "POST")
-                    {
-                        postData = await GetPostDataAsync(request);
+                    continue;
+                }
+                var requestParameters = GetRequestParameters(request, path);
+                switch (request.HttpMethod)
+                {
+                    case "POST":
+                        var postData = await GetPostDataAsync(request);
                         return await requestHandler.PostRequestAsync(request, requestParameters, postData);
-                    }
-                    else if (request.HttpMethod == "GET")
-                    {
+                    case "GET":
                         return await requestHandler.GetRequestAsync(request, requestParameters);
-                    }
                 }
             }
             return Responses.NotFound(request, new RequestParameters());
@@ -94,13 +92,16 @@ namespace SimpleWebApiServer
 
         private void OptionsRequestResponse(HttpListenerRequest request, HttpListenerResponse response)
         {
+            if (request == null)
+            {
+                return;
+            }
+
             response.Headers.Clear();
             SetCorsHeaders(response);
             response.StatusCode = 200;
-            //byte[] buf = new byte[0];
-            //response.ContentLength64 = buf.Length;
-            //response.OutputStream.Write(buf, 0, buf.Length);
         }
+
         private void SetCorsHeaders(HttpListenerResponse response)
         {
             response.AppendHeader("Access-Control-Allow-Origin", "*");
@@ -132,12 +133,7 @@ namespace SimpleWebApiServer
         private RequestParameters GetRequestParameters(HttpListenerRequest request, string urlPattern)
         {
             return new RequestParameters(_urlParser.GetParametersFromUrl(request.Url.ToString(), urlPattern),
-                                                                  _urlParser.GetQueryParametersFromUrl(request.Url.ToString()));
-        }
-        private RequestParameters GetRequestParameters(HttpListenerRequest request)
-        {
-            return new RequestParameters(_urlParser.GetParametersFromUrl(request.Url.ToString(), string.Empty),
-                                                                  _urlParser.GetQueryParametersFromUrl(request.Url.ToString()));
+                                                                  Requesturl.GetQueryParametersFromUrl(request.Url.ToString()));
         }
 
         public async void Run()
@@ -147,10 +143,10 @@ namespace SimpleWebApiServer
                 var ctx = await _listener.GetContextAsync();
                 try
                 {
-                    Stopwatch sw = new Stopwatch();
+                    var sw = new Stopwatch();
                     sw.Start();
-                    if (string.Compare(ctx.Request.HttpMethod, "OPTIONS", true) == 0 ||
-                        string.Compare(ctx.Request.HttpMethod, "ORIGIN", true) == 0)
+                    if (string.Compare(ctx.Request.HttpMethod, "OPTIONS", StringComparison.OrdinalIgnoreCase) == 0 ||
+                        string.Compare(ctx.Request.HttpMethod, "ORIGIN", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         OptionsRequestResponse(ctx.Request, ctx.Response);
                     }
@@ -184,21 +180,6 @@ namespace SimpleWebApiServer
                     ctx.Response.Close();
                 }
             }
-        }
-
-        static public string StackTraceToString()
-        {
-            StringBuilder sb = new StringBuilder(256);
-            var frames = new System.Diagnostics.StackTrace().GetFrames();
-            for (int i = 1; i < frames.Length; i++) /* Ignore current StackTraceToString method...*/
-            {
-                var currFrame = frames[i];
-                var method = currFrame.GetMethod();
-                sb.AppendLine(string.Format("{0}:{1}",
-                    method.ReflectedType != null ? method.ReflectedType.Name : string.Empty,
-                    method.Name));
-            }
-            return sb.ToString();
         }
 
         public void Stop()

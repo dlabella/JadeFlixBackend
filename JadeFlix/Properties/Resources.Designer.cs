@@ -39,7 +39,7 @@ namespace JadeFlix.Properties {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AnimeCatalog.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("JadeFlix.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,32 +57,6 @@ namespace JadeFlix.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Busca una cadena traducida similar a (function(a, d) {
-        ///    var b = function(b) {
-        ///        while (--b) {
-        ///            a[&apos;push&apos;](a[&apos;shift&apos;]());
-        ///        }
-        ///    };
-        ///    var c = function() {
-        ///        var a = {
-        ///            &apos;data&apos;: {
-        ///                &apos;key&apos;: &apos;cookie&apos;,
-        ///                &apos;value&apos;: &apos;timeout&apos;
-        ///            },
-        ///            &apos;setCookie&apos;: function(b, h, i, e) {
-        ///                e = e || {};
-        ///                var c = h + &apos;=&apos; + i;
-        ///                var a = 0x0;
-        ///                for (var a = 0x0, f = b[&apos;length&apos;]; a &lt; f; a++) {
-        ///                    [resto de la cadena truncado]&quot;;.
-        /// </summary>
-        public static string gst_js {
-            get {
-                return ResourceManager.GetString("gst_js", resourceCulture);
             }
         }
     }

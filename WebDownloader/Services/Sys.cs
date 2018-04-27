@@ -14,8 +14,6 @@ namespace WebDownloader.Services
            Action<string> onErrorLine = null,
            Action<int> onExit = null)
         {
-            string lastData = string.Empty;
-            bool completed = false;
             var process = new Process
             {
                 StartInfo =
@@ -30,9 +28,9 @@ namespace WebDownloader.Services
             Logger.Debug($"Command Exceuted: {command} {arguments}");
             process.OutputDataReceived += (sender, e) =>
             {
-                if (e.Data == null || completed) return;
+                if (e.Data == null) return;
 
-                onReadLine(e.Data);
+                onReadLine?.Invoke(e.Data);
             };
             process.ErrorDataReceived += (sender, e) =>
             {
@@ -51,7 +49,6 @@ namespace WebDownloader.Services
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             process.WaitForExit();
-            completed = true;
             onExit?.Invoke(process.ExitCode);
         }
     }

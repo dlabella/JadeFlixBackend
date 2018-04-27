@@ -1,16 +1,13 @@
-﻿using Common;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using static JadeFlix.Domain.Enums;
 
 namespace JadeFlix.Domain
 {
     [Serializable]
-    public class CatalogItemOV1
+    public class CatalogItemOv1
     {
-        public CatalogItemOV1()
+        public CatalogItemOv1()
         {
             Episodes = new Episodes();
         }

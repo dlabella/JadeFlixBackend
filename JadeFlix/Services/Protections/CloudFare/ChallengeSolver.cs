@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace CloudFlareUtilities
+namespace Jadeflix.Services.Protections.CloudFare
 {
     /// <summary>
     /// Provides methods to solve the JavaScript challenge, which is part of CloudFlares clearance process.
@@ -35,10 +35,10 @@ namespace CloudFlareUtilities
         private static int DecodeSecretNumber(string challengePageContent, string targetHost)
         {
             var challengeScript = Regex.Matches(challengePageContent, ScriptTagPattern, RegexOptions.Singleline)
-                .Cast<Match>().Select(m => m.Groups["Content"].Value)
+                .Select(m => m.Groups["Content"].Value)
                 .First(c => c.Contains("jschl-answer"));
             var seed = DeobfuscateNumber(Regex.Match(challengeScript, SeedPattern).Groups["Number"].Value);
-            var steps = Regex.Matches(challengeScript, StepPattern).Cast<Match>()
+            var steps = Regex.Matches(challengeScript, StepPattern)
                 .Select(s => new Tuple<string, int>(s.Groups["Operator"].Value, DeobfuscateNumber(s.Groups["Number"].Value)));
             var secretNumber = steps.Aggregate(seed, ApplyDecodingStep) + targetHost.Length;
 
@@ -53,7 +53,7 @@ namespace CloudFlareUtilities
                 return CountOnes(simplifiedObfuscatedNumber);
 
             var digitMatches = Regex.Matches(simplifiedObfuscatedNumber, SimplifiedObfuscatedDigitPattern);
-            var numberAsText = digitMatches.Cast<Match>()
+            var numberAsText = digitMatches
                 .Select(m => CountOnes(m.Value))
                 .Aggregate(string.Empty, (number, digit) => number + digit);
 

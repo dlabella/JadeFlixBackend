@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JadeFlix.Domain
+﻿namespace JadeFlix.Domain
 {
     public class SessionData
     {

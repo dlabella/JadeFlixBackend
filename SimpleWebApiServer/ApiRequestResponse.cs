@@ -3,7 +3,6 @@ using SimpleWebApiServer.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -11,16 +10,15 @@ namespace SimpleWebApiServer
 {
     public abstract class ApiRequestResponse<TParams> : IApiRequestResponse
     {
-        private const string URL_TOKEN_PATTERN_REGEX = "(\\{.*\\})";
-        private readonly string _urlPattern;
-        private List<int> _parameterIndexes = new List<int>();
+        private const string UrlTokenPatternRegex = "(\\{.*\\})";
+        private readonly List<int> _parameterIndexes = new List<int>();
 
-        public ApiRequestResponse(string urlPattern, HttpListenerRequestCache cache=null)
+        protected ApiRequestResponse(string urlPattern, HttpListenerRequestCache cache=null)
         {
-            _urlPattern = urlPattern;
+            UrlPattern = urlPattern;
             Cache = cache;
             var urlParts = urlPattern.Split("/");
-            int i = 0;
+            var i = 0;
             foreach(var part in urlParts)
             {
                 if (part.StartsWith("{"))
@@ -31,13 +29,11 @@ namespace SimpleWebApiServer
             }
         }
         public abstract string HttpMethod { get; }
-        public string UrlPattern
+        public string UrlPattern { get; }
+
+        private static string StripPatternFromUrl(string url)
         {
-            get { return _urlPattern; }
-        }
-        public static string StripPatternFromUrl(string url)
-        {
-            return Regex.Replace(url, URL_TOKEN_PATTERN_REGEX, "").ToLower();
+            return Regex.Replace(url, UrlTokenPatternRegex, "").ToLower();
         }
 
         public static string StripPatternFromUrl(Uri url)

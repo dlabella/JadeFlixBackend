@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
 using System;
-using Common;
 using JadeFlix.Domain.ApiParameters;
 using JadeFlix.Domain;
 using System.Threading.Tasks;
+using JadeFlix.Services.Scrapers;
 
 namespace JadeFlix.Api
 {
@@ -18,7 +18,7 @@ namespace JadeFlix.Api
             {
                 return string.Empty;
             }
-            Console.WriteLine("Item Name: " + apiParams.Name);
+            Console.WriteLine($@"Item Name: {apiParams.Name}");
 
             var scraper = AppContext.MediaScrapers.Get(apiParams.ScraperId);
             var localEntry = await AppContext.LocalScraper.GetAsync(apiParams.Group, apiParams.Kind, apiParams.Name);
@@ -51,11 +51,11 @@ namespace JadeFlix.Api
 
         private async Task SyncEntries(CatalogItem local, CatalogItem remote)
         {
-            if (AppContext.LocalScraper.Compare(local, remote) != 0)
+            if (LocalScraper.Compare(local, remote) != 0)
             {
-                AppContext.LocalScraper.SaveImagesToLocal(remote);
-                AppContext.LocalScraper.SetLocalImages(remote);
-                await AppContext.LocalScraper.SaveAsync(remote);
+                LocalScraper.SaveImagesToLocal(remote);
+                LocalScraper.SetLocalImages(remote);
+                await LocalScraper.SaveAsync(remote);
             }
         }
         public override GetItemApiParameters ParseParameters(RequestParameters parameters)

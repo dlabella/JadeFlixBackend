@@ -1,36 +1,34 @@
 ﻿using Common.Logging;
-using MediaCatalog;
 using SimpleWebApiServer;
 using System;
-using System.Diagnostics;
 using System.Runtime.Loader;
 using System.Threading;
 
 namespace JadeFlix
 {
-    class Program
+    internal static class Program
     {
-        private static ManualResetEvent resetEvent = new ManualResetEvent(false);
+        private static readonly ManualResetEvent ResetEvent = new ManualResetEvent(false);
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AssemblyLoadContext.Default.Unloading += SigTermEventHandler;
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
+            Console.CancelKeyPress += CancelHandler;
 
             try
             {
                 AppContext.Initialize();
-                int port = GetIntArgument(args,1);
-                string ip = GetStringArgument(args,0);
-                string urlPrefix = GetStringArgument(args,2);
-                string debug = GetStringArgument(args,3);
+                var port = GetIntArgument(args,1);
+                var ip = GetStringArgument(args,0);
+                var urlPrefix = GetStringArgument(args,2);
+                var debug = GetStringArgument(args,3);
 
                 if (debug.ToLower().EndsWith("debug"))
                 {
                     System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
                 }
 
-                WebServer server = new WebServer(ip, port, urlPrefix);
+                var server = new WebServer(ip, port, urlPrefix);
 
                 RegisterRequestHandlers(server);
                 RegisterMediaScrapers();
@@ -38,7 +36,7 @@ namespace JadeFlix
                 server.Run();
                 Logger.Debug($"Listening at {ip}:{port} with urlPrefix {urlPrefix}");
                 Logger.Debug("Press Ctrl+C to exit ...");
-                resetEvent.WaitOne();
+                ResetEvent.WaitOne();
             }
             catch (Exception ex)
             {
@@ -70,8 +68,7 @@ namespace JadeFlix
 
         private static void RegisterMediaScrapers()
         {
-            //MediaScrapers.Add(new AnimeCatalog.Services.Scrapers.AnimeYt(Cache));
-            AppContext.MediaScrapers.Add(new JadeFlix.Services.Scrapers.AnimeFlv());
+            AppContext.MediaScrapers.Add(new Services.Scrapers.AnimeFlv());
         }
 
         private static void RegisterRequestHandlers(WebServer server)
@@ -91,13 +88,13 @@ namespace JadeFlix
 
         private static void SigTermEventHandler(AssemblyLoadContext obj)
         {
-            resetEvent.Set();
+            ResetEvent.Set();
             Logger.Debug("Unloading...");
         }
 
         private static void CancelHandler(object sender, ConsoleCancelEventArgs e)
         {
-            resetEvent.Set();
+            ResetEvent.Set();
             Logger.Debug("Exiting...");
         }
     }

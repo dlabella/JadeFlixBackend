@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using SimpleWebApiServer;
-using Newtonsoft.Json;
 using JadeFlix.Domain.ApiParameters;
 using System;
 using System.Threading.Tasks;

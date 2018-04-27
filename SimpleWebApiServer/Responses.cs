@@ -1,4 +1,4 @@
-﻿using SimpleWebApiServer.RequestResponses;
+﻿using SimpleWebApiServer.ServerResponses;
 using System;
 using System.Net;
 

@@ -14,22 +14,19 @@ namespace JadeFlix.Services.Scrapers
 {
     public class LocalScraper
     {
-        //"(\\[.*\\])|(\".*\")|('.*')|(\\(.*\\))";
-        private Regex regexBrackets = new Regex("(\\[.*\\])|(\\(.*\\))");
-        public LocalScraper()
-        {
-        }
+        private readonly Regex _regexBrackets = new Regex("(\\[.*\\])|(\\(.*\\))");
 
-        private static List<string> MediaExtensions = new List<string>(){
+        private static readonly List<string> MediaExtensions = new List<string>(){
             ".AVI", ".MP4", ".DIVX", ".WMV",
         };
-        public async Task SaveAsync(CatalogItem entry)
+
+        public static async Task SaveAsync(CatalogItem entry)
         {
             try
             {
                 var path = GetDataFile(entry.GroupName, entry.KindName, entry.Name);
                 var finfo = new FileInfo(path);
-                if (!finfo.Directory.Exists)
+                if (finfo.Directory != null && !finfo.Directory.Exists)
                 {
                     Directory.CreateDirectory(finfo.Directory.FullName);
                 }
@@ -42,11 +39,9 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        public int Compare(CatalogItem a, CatalogItem b)
+        public static int Compare(CatalogItem a, CatalogItem b)
         {
-            int cmp = 0;
-
-            cmp = a.Kind.CompareTo(b.Kind);
+            var cmp = a.Kind.CompareTo(b.Kind);
             if (cmp != 0)
             {
                 return cmp;
@@ -55,13 +50,13 @@ namespace JadeFlix.Services.Scrapers
             if (a.UId == null ||
                 a.Plot == null) return -1;
 
-            cmp = a.NId.CompareTo(b.NId);
+            cmp = string.Compare(a.NId, b.NId, StringComparison.Ordinal);
             if (cmp != 0) return cmp;
 
-            cmp = a.UId.CompareTo(b.UId);
+            cmp = string.Compare(a.UId, b.UId, StringComparison.Ordinal);
             if (cmp != 0) return cmp;
 
-            cmp = a.Plot.CompareTo(b.Plot);
+            cmp = string.Compare(a.Plot, b.Plot, StringComparison.Ordinal);
             if (cmp != 0) return cmp;
 
             if (cmp != 0)
@@ -70,14 +65,14 @@ namespace JadeFlix.Services.Scrapers
             }
             foreach (var item in a.Media.Remote)
             {
-                if (!b.Media.Remote.Any(x => x.UId == item.UId))
+                if (b.Media.Remote.All(x => x.UId != item.UId))
                 {
                     return -1;
                 }
             }
             foreach (var item in b.Media.Remote)
             {
-                if (!a.Media.Remote.Any(x => x.UId == item.UId))
+                if (a.Media.Remote.All(x => x.UId != item.UId))
                 {
                     return 1;
                 }
@@ -104,6 +99,20 @@ namespace JadeFlix.Services.Scrapers
             return item;
         }
 
+        private static CatalogItem GetFastAsync(string groupName, string kindName, string name)
+        {
+            var item = BuidlCatalogItem(groupName, kindName, name);
+
+            if (string.IsNullOrEmpty(item.ScrapedBy))
+            {
+                item.ScrapedBy = "Local";
+            }
+
+            SetLocalImages(item);
+
+            return item;
+        }
+
         public async Task<List<CatalogItem>> GetItemsAsync(string group, string kind)
         {
             var items = new List<CatalogItem>();
@@ -111,47 +120,56 @@ namespace JadeFlix.Services.Scrapers
             var dir = new DirectoryInfo(path);
             if (!dir.Exists) return items;
 
-            foreach (var directory in dir.GetDirectories().OrderBy(x => x.Name))
+            foreach (var directory in dir.GetDirectories().OrderByDescending(x => x.CreationTime).ThenBy(x=>x.Name))
             {
-                ProcessFixes(directory);
-
                 Logger.Debug("Loading: " + directory.Name);
-                var item = await GetAsync(group, kind, directory.Name);
-                if (item != null && (item.Media.Local.Count > 0 || item.Watching))
-                {
-                    items.Add(item);
-                }
+                var item = GetFastAsync(group, kind, directory.Name);
+                items.Add(item);
             }
-            return items.OrderByDescending(x=>x.Watching).ToList();
+
+            await Task.Delay(10);
+            return items; 
         }
 
-        private void ProcessFixes(DirectoryInfo dir)
-        {
-            Fixes.FixOlderCovers.Apply(dir);
-            Fixes.RemoveNonParseableJsons.Apply(dir);
-        }
-
-        public async Task<CatalogItem> Load(string groupName, string kindName, string name)
+        private static async Task<CatalogItem> Load(string groupName, string kindName, string name)
         {
             var data = GetDataFile(groupName, kindName, name);
-            if (File.Exists(data))
+            if (!File.Exists(data))
             {
-                try
+                return BuidlCatalogItem(groupName, kindName, name);
+            }
+
+            CatalogItem item;
+
+            try
+            {
+                var jsonData = await File.ReadAllTextAsync(data);
+                if (jsonData != null)
                 {
-                    var jsonData = await File.ReadAllTextAsync(data);
-                    if (jsonData != null)
+                    item = await Task.Run(() => JsonConvert.DeserializeObject<CatalogItem>(jsonData));
+
+                    if (string.IsNullOrEmpty(item.Name) &&
+                        string.IsNullOrEmpty(item.KindName) &&
+                        string.IsNullOrEmpty(item.GroupName))
                     {
-                        var item = JsonConvert.DeserializeObject<CatalogItem>(jsonData);
-                        if (!string.IsNullOrEmpty(item.Name) &&
-                            !string.IsNullOrEmpty(item.KindName) &&
-                            !string.IsNullOrEmpty(item.GroupName))
-                        {
-                            return item;
-                        }
+                        item = BuidlCatalogItem(groupName, kindName, name);
                     }
                 }
-                catch (Exception) { }
+                else
+                {
+                    item = BuidlCatalogItem(groupName, kindName, name);
+                }
             }
+            catch (Exception)
+            {
+                item = BuidlCatalogItem(groupName, kindName, name);
+            }
+
+            return item;
+        }
+
+        private static CatalogItem BuidlCatalogItem(string groupName, string kindName, string name)
+        {
             var group = Enum.Parse<EntryGroup>(groupName);
             var kind = Enum.Parse<EntryType>(kindName);
             var newItem = new CatalogItem()
@@ -163,58 +181,35 @@ namespace JadeFlix.Services.Scrapers
             return newItem;
         }
 
-        private string GetDataFileAsync(CatalogItem item)
-        {
-            return GetDataFile(item.GroupName, item.KindName, item.Name);
-        }
-
-        private string GetDataFile(string groupName, string kindName, string name)
+        private static string GetDataFile(string groupName, string kindName, string name)
         {
             var path = GetMediaPath(groupName, kindName, name);
             var data = Path.Combine(path, "data.json");
             return data;
         }
-        public string GetOrAddItemBanner(CatalogItem item, string url)
+        public static string GetOrAddItemBanner(CatalogItem item, string url)
         {
             return GetOrAddItemImage("banner", item.GroupName, item.KindName, item.Name, url);
         }
-        public string GetOrAddItemBanner(string group, string kind, string name, string url)
-        {
-            return GetOrAddItemImage("banner", group, kind, name, url);
-        }
-        public string GetOrAddItemPoster(CatalogItem item, string url)
+
+        public static string GetOrAddItemPoster(CatalogItem item, string url)
         {
             return GetOrAddItemImage("poster", item.GroupName, item.KindName, item.Name, url);
         }
-        public string GetOrAddItemPoster(string group, string kind, string name, string url)
+
+        public static string GetItemPoster(CatalogItem item, string url)
         {
-            return GetOrAddItemImage("poster", group, kind, name, url);
+            var img = GetItemImage("poster", item.GroupName, item.KindName, item.Name);
+            return !string.IsNullOrEmpty(img) ? img : url;
         }
-        public string GetItemPoster(CatalogItem item, string url)
-        {
-            return GetItemImage("poster", item.GroupName, item.KindName, item.Name);
-        }
-        public string GetItemPoster(string group, string kind, string name)
-        {
-            return GetItemImage("poster", group, kind, name);
-        }
-        public string GetOrAddItemPreview(CatalogItem item, string url)
-        {
-            return GetOrAddItemImage("preview", item.GroupName, item.KindName, item.Name, url);
-        }
-        public string GetOrAddItemPreview(string group, string kind, string name, string url)
-        {
-            return GetOrAddItemImage("preview", group, kind, name, url);
-        }
-        private string GetOrAddItemImage(string imageType, string group, string kind, string name, string url)
+
+        private static string GetOrAddItemImage(string imageType, string group, string kind, string name, string url)
         {
             if (string.IsNullOrEmpty(url)) return string.Empty;
 
-            string fileName = string.Empty;
-
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName(), imageType + ".jpg");
             path = path.ToSafePath();
-            fileName = imageType + ".jpg";
+            var fileName = imageType + ".jpg";
             if (File.Exists(path))
             {
                 return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.ToSafeName() + "/" + fileName.ToSafeName();
@@ -239,7 +234,7 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        private void DownloadFileIfNotLocal(string url, string path, bool diasbleTracking=false)
+        private static void DownloadFileIfNotLocal(string url, string path, bool diasbleTracking=false)
         {
             if (!url.Contains(AppContext.Config.WwwCachePath) &&
                     !url.Contains(AppContext.Config.WwwMediaPath))
@@ -248,13 +243,11 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        private string GetItemImage(string imageType, string group, string kind, string name)
+        private static string GetItemImage(string imageType, string group, string kind, string name)
         {
-            string fileName = string.Empty;
-
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName(), imageType + ".jpg");
             path = path.ToSafePath();
-            fileName = imageType + ".jpg";
+            var fileName = imageType + ".jpg";
             if (File.Exists(path))
             {
                 return AppContext.Config.WwwMediaPath + "/" + group + "/" + kind + "/" + name.ToSafeName() + "/" + fileName.ToSafeName();
@@ -287,7 +280,7 @@ namespace JadeFlix.Services.Scrapers
                     Logger.Debug($"*** {file} has invalid filename and cannot be included");
                     continue;
                 }
-                FileInfo finfo = new FileInfo(file);
+                var finfo = new FileInfo(file);
                 var extension = finfo.Extension.ToUpperInvariant();
                 if (MediaExtensions.Contains(extension))
                 {
@@ -302,34 +295,30 @@ namespace JadeFlix.Services.Scrapers
 
         }
 
-        public bool IsInvalidFilename(string path, string fileName)
+        private static bool IsInvalidFilename(string path, string fileName)
         {
-            int fileIndex = 0;
+            var file = fileName;
             if (fileName.Contains(path))
             {
-                fileIndex = path.Length;
+                var fileIndex = path.Length;
                 fileIndex++;
+                file = fileName.Substring(fileIndex);
             }
-            foreach (var invalidChar in Path.GetInvalidFileNameChars())
-            {
-                if (fileName.Substring(fileIndex).Any(x => x == invalidChar))
-                {
-                    return true;
-                }
-            }
-            return false;
+
+            return FileContainsInvalidChars(file);
+        }
+
+        private static bool FileContainsInvalidChars(string file)
+        {
+            return Path.GetInvalidFileNameChars().Any(invalidChar => file.Any(x => x == invalidChar));
         }
         private int ExtractNumberFromMediaFile(string text)
         {
-            var sanitizedName = regexBrackets.Replace(text, "").ToLower().Replace(".mp4", "");
-            var number = string.Join("", sanitizedName.Where(Char.IsDigit));
-            if (!string.IsNullOrEmpty(number))
-            {
-                return int.Parse(number);
-            }
-            return 0;
+            var sanitizedName = _regexBrackets.Replace(text, "").ToLower().Replace(".mp4", "");
+            var number = string.Join("", sanitizedName.Where(char.IsDigit));
+            return !string.IsNullOrEmpty(number) ? int.Parse(number) : 0;
         }
-        public void SaveImagesToLocal(CatalogItem item)
+        public static void SaveImagesToLocal(CatalogItem item)
         {
             var path = GetMediaPath(item);
             var poster = Path.Combine(path, "poster.jpg");
@@ -346,14 +335,14 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        public void SetLocalImages(CatalogItem item)
+        public static void SetLocalImages(CatalogItem item)
         {
             var wwwpath = GetWwwPath(item);
             item.Banner = wwwpath + "/banner.jpg";
             item.Poster = wwwpath + "/poster.jpg";
         }
 
-        public async Task SetLocalPlot(CatalogItem item)
+        private static async Task SetLocalPlot(CatalogItem item)
         {
             var path = GetMediaPath(item);
             var plotFile = Path.Combine(path, "plot.txt");
@@ -363,18 +352,18 @@ namespace JadeFlix.Services.Scrapers
             }
         }
 
-        public string GetWwwPath(CatalogItem item)
+        private static string GetWwwPath(CatalogItem item)
         {
             var path = AppContext.Config.WwwMediaPath.TrimEnd('/') + "/" + item.GroupName + "/" + item.KindName + "/" + item.Name.ToSafeName();
             return path;
         }
 
-        public string GetMediaPath(CatalogItem item)
+        private static string GetMediaPath(CatalogItem item)
         {
             return GetMediaPath(item.GroupName, item.KindName, item.Name);
         }
 
-        public string GetMediaPath(string group, string kind, string name)
+        private static string GetMediaPath(string group, string kind, string name)
         {
             var path = Path.Combine(AppContext.Config.MediaPath, group, kind, name.ToSafeName());
             return path.ToSafePath();

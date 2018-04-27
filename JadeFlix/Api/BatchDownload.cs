@@ -3,11 +3,9 @@ using SimpleWebApiServer;
 using System;
 using JadeFlix.Services;
 using Common;
-using System.IO;
 using System.Linq;
 using Common.Logging;
 using System.Threading;
-using System.Collections.Concurrent;
 using JadeFlix.Domain;
 using JadeFlix.Domain.ApiParameters;
 using JadeFlix.Extensions;
@@ -17,7 +15,7 @@ namespace JadeFlix.Api
 {
     public class BatchDownload : ApiGetRequestResponse<BatchApiParams>
     {
-        public static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
+        //private static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
         public BatchDownload(HttpListenerRequestCache cache = null) : base("/api/batchDownload", cache) { }
         public override bool IsCacheable => false;
 
@@ -42,15 +40,17 @@ namespace JadeFlix.Api
             return ToJson(new { result = "OK", key = apiParams.Key.EncodeToBase64() });
         }
 
-        private async Task<bool> CanEnqueueDownload(CatalogItem item, DownloadableNamedUri media, BatchApiParams parameters)
+        private static async Task<bool> CanEnqueueDownload(CatalogItem item, DownloadableNamedUri media, BatchApiParams parameters)
         {
+            Logger.Debug($"Parameters are valid {parameters.AreValid}");
             var local = await AppContext.LocalScraper.GetAsync(item.GroupName, item.KindName, item.Name);
-            if (local != null && local.Media.Local.Any(x => string.Compare(x.Name, media.GetFileName(), true) == 0))
+            if (local == null || local.Media.Local.All(x =>
+                    string.Compare(x.Name, media.GetFileName(), StringComparison.OrdinalIgnoreCase) != 0))
             {
-                Logger.Debug("Skipping " + item.Name + " already in local");
-                return false;
+                return true;
             }
-            return true;
+            Logger.Debug("Skipping " + item.Name + " already in local");
+            return false;
         }
 
         private static async Task<bool> EnqueueDownload(BatchApiParams apiParams, CatalogItem tvshow, DownloadableNamedUri item)

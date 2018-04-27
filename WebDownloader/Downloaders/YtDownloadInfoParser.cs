@@ -1,7 +1,6 @@
 ﻿using Common.Logging;
 using System;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using WebDownloader.Domain;
 using WebDownloader.Services;
 
@@ -9,14 +8,6 @@ namespace WebDownloader.Downloaders
 {
     public class YtDownloadInfoParser : DownloadInfoLineParser
     {
-        public YtDownloadInfoParser()
-        {
-        }
-
-        public void Reset()
-        {
-        }
-
         public override DownloadInfo Parse(string line, string id = null, Uri source = null, string file = null)
         {
             var data = new DownloadInfo(id, file, source);

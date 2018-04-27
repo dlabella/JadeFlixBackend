@@ -20,12 +20,12 @@ namespace SimpleWebApiServer
             return PatternMatch(_baseUrl, url, pattern);
         }
 
-        public bool PatternMatch(string baseUrl, string url, string pattern)
+        private static bool PatternMatch(string baseUrl, string url, string pattern)
         {
             var strippedUrl = url;
             if (url.Contains("?"))
             {
-                var start = url.IndexOf("?");
+                var start = url.IndexOf("?", StringComparison.Ordinal);
                 if (start > 0)
                 {
                     strippedUrl = url.Substring(0, start);
@@ -34,21 +34,16 @@ namespace SimpleWebApiServer
 
             var splittedUrl = strippedUrl.Replace(baseUrl, "").TrimEnd('/').Split("/");
             var splittedPattern = pattern.Replace(baseUrl, "").TrimEnd('/').Split("/");
-            if (splittedUrl.Length == splittedPattern.Length)
+            if (splittedUrl.Length != splittedPattern.Length) return false;
+            for (var i = 0; i < splittedUrl.Length; i++)
             {
-                for (var i = 0; i < splittedUrl.Length; i++)
+                if (splittedPattern[i].StartsWith("{")) continue;
+                if (string.Compare(splittedUrl[i], splittedPattern[i], StringComparison.OrdinalIgnoreCase) != 0)
                 {
-                    if (!splittedPattern[i].StartsWith("{"))
-                    {
-                        if (string.Compare(splittedUrl[i], splittedPattern[i], true) != 0)
-                        {
-                            return false;
-                        }
-                    }
+                    return false;
                 }
-                return true;
             }
-            return false;
+            return true;
         }
 
         public Dictionary<string, string> GetParametersFromUrl(string url, string pattern)
@@ -56,13 +51,13 @@ namespace SimpleWebApiServer
             return GetParametersFromUrl(_baseUrl, url, pattern);
         }
 
-        public Dictionary<string, string> GetParametersFromUrl(string baseUrl, string url, string pattern)
+        private static Dictionary<string, string> GetParametersFromUrl(string baseUrl, string url, string pattern)
         {
             var strippedUrl = url;
-            var start = url.LastIndexOf("/");
+            var start = url.LastIndexOf("/", StringComparison.Ordinal);
             if (start > 0 && url.Substring(start).Contains("?"))
             {
-                strippedUrl = url.Substring(0, url.IndexOf("?"));
+                strippedUrl = url.Substring(0, url.IndexOf("?", StringComparison.Ordinal));
             }
             var splittedUrl = strippedUrl.Replace(baseUrl, "").TrimEnd('/').Split("/");
             var splittedPattern = pattern.Replace(baseUrl, "").TrimEnd('/').Split("/");
@@ -80,11 +75,11 @@ namespace SimpleWebApiServer
             return result;
         }
 
-        public Dictionary<string, string> GetQueryParametersFromUrl(string url)
+        public static IDictionary<string, string> GetQueryParametersFromUrl(string url)
         {
             var result = new Dictionary<string, string>();
 
-            var start = url.IndexOf("?");
+            var start = url.IndexOf("?", StringComparison.Ordinal);
             if (start > 0)
             {
                 var queryString = url.Substring(start + 1);

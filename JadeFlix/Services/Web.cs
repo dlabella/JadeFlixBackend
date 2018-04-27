@@ -2,7 +2,7 @@
 using System.Net;
 using System;
 using System.Text;
-using CloudFlareUtilities;
+using Jadeflix.Services.Protections.CloudFare;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -10,10 +10,10 @@ namespace JadeFlix.Services
 {
     public class Web
     {
-        private const string UserAgent = "Mozilla/5.0 (X11; U; Linux armv7l; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.204 Safari/534.16";
-        private const int MaxRetries = 5;
-        private const int MaxParallelDownloads = 2;
-        HttpClient _client;
+        //private const string UserAgent = "Mozilla/5.0 (X11; U; Linux armv7l; en-US) AppleWebKit/534.16 (KHTML, like Gecko) Chrome/10.0.648.204 Safari/534.16";
+        //private const int MaxRetries = 5;
+        //private const int MaxParallelDownloads = 2;
+        private readonly HttpClient _client;
 
 
         public Web()

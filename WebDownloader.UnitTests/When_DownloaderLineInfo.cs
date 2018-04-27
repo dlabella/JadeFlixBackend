@@ -5,7 +5,7 @@ using WebDownloader.Downloaders;
 namespace WebDownloader.UnitTests
 {
     [TestClass]
-    public class When_DownloaderLineInfo
+    public class WhenDownloaderLineInfo
     {
         [TestMethod]
         public void CurlLineInfoRead()
@@ -24,8 +24,9 @@ namespace WebDownloader.UnitTests
             Assert.IsTrue(data.BytesTotal== 310378496);
             Assert.IsTrue(data.BytesReceived == 512000);
         }
+
         [TestMethod]
-        public void YTLineInfoRead()
+        public void YtLineInfoRead()
         {
             var sut = new YtDownloadInfoParser();
             DownloadInfo data;

@@ -3,7 +3,6 @@ using SimpleWebApiServer;
 using System;
 using JadeFlix.Services;
 using Common;
-using System.IO;
 using Common.Logging;
 using JadeFlix.Domain.ApiParameters;
 using System.Threading.Tasks;

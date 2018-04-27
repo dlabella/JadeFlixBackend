@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SimpleWebApiServer.Extensions
+﻿namespace SimpleWebApiServer.Extensions
 {
     public static class StringExtensions
     {
         public static string FormatJson(this string json, params string[] values)
         {
             var result = json;
-            for(int i = 0; i < values.Length; i++)
+            for(var i = 0; i < values.Length; i++)
             {
-                result = result.Replace("{" + i + "}", values[i].ToString());
+                result = result.Replace("{" + i + "}", values[i]);
             }
             return result;
         }

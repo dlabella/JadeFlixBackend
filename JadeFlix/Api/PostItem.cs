@@ -6,6 +6,7 @@ using System.Linq;
 using Common.Logging;
 using JadeFlix.Domain.ApiParameters;
 using System.Threading.Tasks;
+using JadeFlix.Services.Scrapers;
 
 namespace JadeFlix.Api
 {
@@ -18,7 +19,7 @@ namespace JadeFlix.Api
             var item = FromJson<CatalogItem>(postData);
             if (item != null)
             {
-                await AppContext.LocalScraper.SaveAsync(item);
+                await LocalScraper.SaveAsync(item);
                 UpdateCacheEntries(item);
 
                 return ToJson(new { status = "ok" });
@@ -28,12 +29,12 @@ namespace JadeFlix.Api
 
         private void UpdateCacheEntries(CatalogItem item)
         {
-            var cacheEntriesWithArray = new string[] { "api/getRecent", "api/getLocal" };
+            var cacheEntriesWithArray = new [] { "api/getRecent", "api/getLocal" };
             foreach (var cache in cacheEntriesWithArray)
             {
                 UpdateCatalogItemArray(cache, item);
             }
-            var cacheEntriesSingle = new string[] { "api/getItem" };
+            var cacheEntriesSingle = new [] { "api/getItem" };
             foreach (var cache in cacheEntriesSingle)
             {
                 UpdateCatalogItem(cache, item);
@@ -41,42 +42,44 @@ namespace JadeFlix.Api
         }
         private void UpdateCatalogItemArray(string cacheFilter, CatalogItem item)
         {
-            foreach (var cache in base.Cache.TryGetCachedItem(cacheFilter))
+            foreach (var cache in Cache.TryGetCachedItem(cacheFilter))
             {
-                if (cache.Value != null)
+                if (cache.Value == null)
                 {
-                    var cachedItems = FromJson<CatalogItem[]>(cache.Value);
-                    var cachedItem = cachedItems.FirstOrDefault(x => x.UId == item.UId);
-                    if (cachedItem != null)
-                    {
-                        var idx = Array.IndexOf(cachedItems, cachedItem);
-                        cachedItems[idx] = item;
-                    }
-                    else
-                    {
-                        //Ups! not found in cache, but it must be in...
-                        base.Cache.TryRemoveCachedItem(cache);
-                    }
-                    cache.Value = ToJson(cachedItems);
-                    Logger.Debug("Updated CatalogItem Array from cache [" + cacheFilter + "]");
+                    continue;
                 }
+                var cachedItems = FromJson<CatalogItem[]>(cache.Value);
+                var cachedItem = cachedItems.FirstOrDefault(x => x.UId == item.UId);
+                if (cachedItem != null)
+                {
+                    var idx = Array.IndexOf(cachedItems, cachedItem);
+                    cachedItems[idx] = item;
+                }
+                else
+                {
+                    //Ups! not found in cache, but it must be in...
+                    Cache.TryRemoveCachedItem(cache);
+                }
+                cache.Value = ToJson(cachedItems);
+                Logger.Debug("Updated CatalogItem Array from cache [" + cacheFilter + "]");
             }
         }
 
         private void UpdateCatalogItem(string cacheFilter, CatalogItem item)
         {
-            foreach (var cache in base.Cache.TryGetCachedItem(cacheFilter))
+            foreach (var cache in Cache.TryGetCachedItem(cacheFilter))
             {
-                if (cache.Value != null && cache.Source.Contains(item.UId))
+                if (cache.Value == null || !cache.Source.Contains(item.UId))
                 {
-                    var cachedItem = FromJson<CatalogItem>(cache.Value);
-                    if (cachedItem != null && cachedItem.UId == item.UId)
-                    {
-                        cache.Value = ToJson(item);
-                    }
-                    
-                    Logger.Debug("Updated CatalogItem from cache [" + cacheFilter + "]");
+                    continue;
                 }
+                var cachedItem = FromJson<CatalogItem>(cache.Value);
+                if (cachedItem != null && cachedItem.UId == item.UId)
+                {
+                    cache.Value = ToJson(item);
+                }
+                    
+                Logger.Debug("Updated CatalogItem from cache [" + cacheFilter + "]");
             }
         }
 

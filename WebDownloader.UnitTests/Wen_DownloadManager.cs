@@ -1,14 +1,11 @@
 ﻿using JadeFlix.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using WebDownloader.Downloaders;
 
 namespace WebDownloader.UnitTests
 {
     [TestClass]
-    public class Wen_DownloadManager
+    public class WhenDownloadManager
     {
         [TestMethod]
         public void EnqueueMultipleDownloads()

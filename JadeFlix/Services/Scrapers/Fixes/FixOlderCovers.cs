@@ -1,8 +1,6 @@
 ﻿using Common.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace JadeFlix.Services.Scrapers.Fixes
 {

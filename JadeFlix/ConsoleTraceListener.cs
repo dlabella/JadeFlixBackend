@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
-namespace MediaCatalog
+namespace JadeFlix
 {
     public class ConsoleTraceListener : TraceListener
     {

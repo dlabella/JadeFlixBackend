@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SimpleWebApiServer.RequestResponses
+namespace SimpleWebApiServer.ServerResponses
 {
     public class NotFoundResponse:ServerResponse
     {

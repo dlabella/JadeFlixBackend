@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CloudFlareUtilities
+namespace Jadeflix.Services.Protections.CloudFare
 {
     /// <summary>
     /// A HTTP handler that transparently manages Cloudflare's Anti-DDoS measure.
@@ -74,7 +74,7 @@ namespace CloudFlareUtilities
         /// <returns>The task object representing the asynchronous operation.</returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var IdCookieBefore = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, IdCookieName).FirstOrDefault();
+            var idCookieBefore = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, IdCookieName).FirstOrDefault();
             var clearanceCookieBefore = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, ClearanceCookieName).FirstOrDefault();
 
             EnsureClientHeader(request);
@@ -99,15 +99,15 @@ namespace CloudFlareUtilities
             if (IsClearanceRequired(response))
                 throw new CloudFlareClearanceException(retries);
 
-            var IdCookieAfter = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, IdCookieName).FirstOrDefault();
+            var idCookieAfter = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, IdCookieName).FirstOrDefault();
             var clearanceCookieAfter = ClientHandler.CookieContainer.GetCookiesByName(request.RequestUri, ClearanceCookieName).FirstOrDefault();
 
             // inject set-cookie headers in case the cookies changed
-            if (IdCookieAfter != null && IdCookieAfter != IdCookieBefore)
+            if (idCookieAfter != null && idCookieAfter.Equals(idCookieBefore))
             {
-                response.Headers.Add(HttpHeader.SetCookie, IdCookieAfter.ToHeaderValue());
+                response.Headers.Add(HttpHeader.SetCookie, idCookieAfter.ToHeaderValue());
             }
-            if (clearanceCookieAfter != null && clearanceCookieAfter != clearanceCookieBefore)
+            if (clearanceCookieAfter != null && clearanceCookieAfter.Equals(clearanceCookieBefore))
             {
                 response.Headers.Add(HttpHeader.SetCookie, clearanceCookieAfter.ToHeaderValue());
             }
@@ -178,9 +178,9 @@ namespace CloudFlareUtilities
             var cookies = response.Headers
                 .Where(pair => pair.Key == HttpHeader.SetCookie)
                 .SelectMany(pair => pair.Value)
-                .Where(cookie => cookie.StartsWith($"{IdCookieName}="));
+                .Where(cookie => cookie.StartsWith($"{IdCookieName}=")).ToList();
 
-            if (cookies.Count() == 0)
+            if (!cookies.Any())
                 return;
 
             // Expire any old cloudflare cookies.

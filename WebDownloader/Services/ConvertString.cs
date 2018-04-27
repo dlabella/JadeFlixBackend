@@ -38,22 +38,22 @@ namespace WebDownloader.Services
             {
                 return 0;
             }
-            var val = 0M;
+            decimal val;
+            int i;
             var strBs = str.Trim().ToUpper();
-            int i = 0;
             if (strBs.Contains("G"))
             {
-                i = strBs.IndexOf("G");
+                i = strBs.IndexOf("G", StringComparison.Ordinal);
                 return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1073741824) : 0;
             }
             if (strBs.Contains("M"))
             {
-                i = strBs.IndexOf("M");
+                i = strBs.IndexOf("M", StringComparison.Ordinal);
                 return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1048576) : 0;
             }
             if (strBs.Contains("K"))
             {
-                i = strBs.IndexOf("K");
+                i = strBs.IndexOf("K", StringComparison.Ordinal);
                 return decimal.TryParse(strBs.Substring(0, i), NumberStyles.Number, new CultureInfo("en-US"), out val) ? (int)(val * 1024) : 0;
             }
             return decimal.TryParse(strBs, out val) ? (int)val : 0;

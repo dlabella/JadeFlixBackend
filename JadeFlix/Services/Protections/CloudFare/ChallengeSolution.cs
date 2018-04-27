@@ -1,10 +1,7 @@
 ﻿using System;
 
-namespace CloudFlareUtilities
+namespace Jadeflix.Services.Protections.CloudFare
 {
-    /// <summary>
-    /// Holds the information, which is required to pass the CloudFlare clearance.
-    /// </summary>
     public struct ChallengeSolution : IEquatable<ChallengeSolution>
     {
         public ChallengeSolution(string clearancePage, string verificationCode, string pass, int answer)

@@ -4,7 +4,6 @@ using Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using WebDownloader.Domain;
 using WebDownloader.Domain.EventHandlers;
 using WebDownloader.Services;
@@ -13,19 +12,11 @@ namespace WebDownloader.Downloaders
 {
     public class CurlDownloader : Downloader
     {
-        string _curlBin;
-        CurlDownloadInfoParser _curlDownloadInfoParser;
+        private readonly string _curlBin;
+        private readonly CurlDownloadInfoParser _curlDownloadInfoParser;
         public CurlDownloader() : base("Curl")
         {
-            var bin = string.Empty;
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                _curlBin = @"C:\usr\bin\curl.exe";
-            }
-            else
-            {
-                _curlBin = @"/usr/bin/curl";
-            }
+            _curlBin = Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\curl.exe" : @"/usr/bin/curl";
             _curlDownloadInfoParser = new CurlDownloadInfoParser();
         }
 
@@ -53,12 +44,12 @@ namespace WebDownloader.Downloaders
                 (error) => HandleDownloadError(error),
                 (exitCode) => HandleDownloadCompleted(exitCode, downloadInfo));
         }
-        private void PrepareOutputDirectory(string filePath)
+        private static void PrepareOutputDirectory(string filePath)
         {
             var finfo = new FileInfo(filePath);
             if (!finfo.Exists)
             {
-                finfo.Directory.Create();
+                finfo.Directory?.Create();
             }
         }
 
@@ -79,8 +70,8 @@ namespace WebDownloader.Downloaders
         private void HandleDownloadCompleted(int exitCode, CurlDownloadInfo downloadInfo)
         {
             var di = new DownloadInfo(downloadInfo.Id, downloadInfo.OutputFile, downloadInfo.Url);
-            FileInfo finfo = new FileInfo(downloadInfo.OutputFile);
-            if (finfo != null && finfo.Exists)
+            var finfo = new FileInfo(downloadInfo.OutputFile);
+            if (finfo.Exists)
             {
                 di.BytesTotal = (int)finfo.Length;
                 di.BytesReceived = di.BytesTotal;

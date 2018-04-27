@@ -138,8 +138,7 @@ namespace JadeFlix.Services
 
         private void ActiveDownloadCompleted(object sender, DownloadCompletedEventArgs e)
         {
-            _activeDownloads.TryRemove(e.Info.Id, out DownloadInfo val);
-
+            _activeDownloads.TryRemove(e.Info.Id, out _);
             ProcessQueue();
 
             Logger.Debug("Download of " + e.Info.File + " is completed");

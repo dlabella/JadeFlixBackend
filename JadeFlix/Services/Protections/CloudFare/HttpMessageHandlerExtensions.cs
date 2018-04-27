@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace CloudFlareUtilities
+namespace Jadeflix.Services.Protections.CloudFare
 {
     internal static class HttpMessageHandlerExtensions
     {

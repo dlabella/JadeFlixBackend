@@ -10,8 +10,8 @@ namespace JadeFlix.Api
 {
     public class Session : ApiRequestResponse<SessionApiParams>
     {
-        public static ConcurrentDictionary<string, string> _session = new ConcurrentDictionary<string, string>();
-        public Session(HttpListenerRequest cache = null) : base("/api/session") { }
+        private static readonly ConcurrentDictionary<string, string> SessionData = new ConcurrentDictionary<string, string>();
+        public Session(HttpListenerRequestCache cache = null) : base("/api/session", cache) { }
         public override bool IsCacheable => false;
 
         public override string HttpMethod => "GET|POST";
@@ -19,24 +19,18 @@ namespace JadeFlix.Api
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, SessionApiParams apiParams)
         {
             var sessionKey = GetSessionKey(apiParams.SessionId, request, apiParams.Key);
-            var sessionResponse = new SessionResponse();
-
-            sessionResponse = GetSessionValue(apiParams, sessionKey);
+            var sessionResponse = GetSessionValue(apiParams, sessionKey);
 
             await Task.Delay(10);
-            if (sessionResponse.Result == null)
-            {
-                return string.Empty;
-            }
-            return ToJson(sessionResponse);
+
+            return sessionResponse.Result == null ? string.Empty : ToJson(sessionResponse);
         }
         protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, SessionApiParams apiParams, string postData)
         {
             var sessionKey = GetSessionKey(apiParams.SessionId, request, apiParams.Key);
-            var sessionResponse = new SessionResponse();
             apiParams.Value = postData;
 
-            sessionResponse = SetSessionValue(apiParams, sessionKey);
+            var sessionResponse = SetSessionValue(apiParams, sessionKey);
 
             await Task.Delay(10);
             return ToJson(sessionResponse);
@@ -44,8 +38,8 @@ namespace JadeFlix.Api
         private static SessionResponse SetSessionValue(SessionApiParams apiParams, string sessionKey)
         {
             var sessionResponse = new SessionResponse();
-            Console.WriteLine("Creating new session key: " + sessionKey);
-            _session.AddOrUpdate(sessionKey, apiParams.Value, (oldItem, newItem) => { return apiParams.Value; });
+            Console.WriteLine($@"Creating new session key: {sessionKey}");
+            SessionData.AddOrUpdate(sessionKey, apiParams.Value, (oldItem, newItem) => { return apiParams.Value; });
             sessionResponse.Result = "200";
 
             return sessionResponse;
@@ -54,21 +48,21 @@ namespace JadeFlix.Api
         private static SessionResponse GetSessionValue(SessionApiParams apiParams, string sessionKey)
         {
             var sessionResponse = new SessionResponse();
-            if (_session.ContainsKey(sessionKey))
+            if (SessionData.ContainsKey(sessionKey))
             {
-                Console.WriteLine("Getting session value for: " + apiParams.Key);
-                sessionResponse.Result = _session[sessionKey];
+                Console.WriteLine($@"Getting session value for: {apiParams.Key}");
+                sessionResponse.Result = SessionData[sessionKey];
             }
             else
             {
-                Console.WriteLine("Session value: " + apiParams.Key + " not found");
+                Console.WriteLine($@"Session value: {apiParams.Key} not found");
             }
             return sessionResponse;
         }
 
-        private string GetSessionKey(string sessionId, HttpListenerRequest request, string key)
+        private static string GetSessionKey(string sessionId, HttpListenerRequest request, string key)
         {
-            return sessionId + "/" + request.RemoteEndPoint.Address.ToString() + "/" + key;
+            return sessionId + "/" + request?.RemoteEndPoint?.Address + "/" + key;
         }
 
         public override SessionApiParams ParseParameters(RequestParameters parameters)
@@ -80,8 +74,5 @@ namespace JadeFlix.Api
                 Value = parameters.GetQueryParameter("value")
             };
         }
-
-        
     }
-
 }

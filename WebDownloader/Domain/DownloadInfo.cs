@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
-using System.Text;
 
 namespace WebDownloader.Domain
 {
@@ -86,7 +85,7 @@ namespace WebDownloader.Domain
             get {
                 if (BytesReceived>0 && BytesTotal > 0)
                 {
-                    return (((float)BytesReceived / (float)BytesTotal) * 100);
+                    return ((BytesReceived / (float)BytesTotal) * 100);
                 }
                 return 0;
             }
@@ -95,10 +94,5 @@ namespace WebDownloader.Domain
         public bool DownloadFaulted { get; set; }
         [JsonIgnore]
         public CookieCollection Cookies { get; set; }
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            return base.ToString();
-        }
     }
 }

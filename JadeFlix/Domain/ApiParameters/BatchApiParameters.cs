@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JadeFlix.Domain.ApiParameters
+﻿namespace JadeFlix.Domain.ApiParameters
 {
     public class BatchApiParams:ApiParamtersBase
     {

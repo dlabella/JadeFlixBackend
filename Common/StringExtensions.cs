@@ -22,13 +22,13 @@ namespace Common
                 }
             }
             //clean bad filename chars  
-            foreach (char badChar in invalidFileChars)
+            foreach (var badChar in invalidFileChars)
             {
                 toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
             }
             if (string.IsNullOrWhiteSpace(replaceWith) == false)
             {
-                toCleanPath = toCleanPath.Replace(replaceWith.ToString() + replaceWith.ToString(), replaceWith.ToString());
+                toCleanPath = toCleanPath.Replace(replaceWith + replaceWith, replaceWith);
             }
             return toCleanPath;
         }
@@ -36,7 +36,7 @@ namespace Common
         public static string ToSafePath(this string toCleanPath, string replaceWith = "-")
         {
             StringBuilder safePath = new StringBuilder();
-            string[] pathParts = toCleanPath.Split(new char[] { PathSeparator });
+            string[] pathParts = toCleanPath.Split(new [] { PathSeparator });
             int i = 0;
             int lastPart = (pathParts.Length - 1);
             foreach(var part in pathParts)
@@ -120,15 +120,15 @@ namespace Common
 
         public static string EncodeToBase64(this string plainText)
         {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes).Replace("/", "_");
+            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            return Convert.ToBase64String(plainTextBytes).Replace("/", "_");
         }
 
         public static string DecodeFromBase64(this string base64EncodedData)
         {
             if (string.IsNullOrEmpty(base64EncodedData)) return string.Empty;
-            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData.Replace("_", "/"));
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData.Replace("_", "/"));
+            return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         private static char PathSeparator 

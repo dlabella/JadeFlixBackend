@@ -3,20 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SimpleWebApiServer
 {
     public class HttpListenerRequestCache
     {
-        private const int _cacheSize = 10;
-        private const int _secondsInCache = 300;
-        private const int _secondsForClean = 10;
-        List<CachedItem> _cache = new List<CachedItem>(_cacheSize);
-        List<string> _nonCacheableRequest = new List<string>();
-        DateTime _expectedNextCacheClean;
-        public string BasePath { get;}
+        private const int CacheSize = 10;
+        private const int SecondsInCache = 300;
+        private const int SecondsForClean = 10;
+        private readonly List<CachedItem> _cache = new List<CachedItem>(CacheSize);
+        private readonly List<string> _nonCacheableRequest = new List<string>();
+        private DateTime _expectedNextCacheClean;
+        private string BasePath { get;}
         public HttpListenerRequestCache(string basePath)
         {
             BasePath = basePath;
@@ -87,9 +86,9 @@ namespace SimpleWebApiServer
             var now = DateTime.Now;
             if (_expectedNextCacheClean > now) return;
 
-            _expectedNextCacheClean.AddSeconds(_secondsForClean);
+            _expectedNextCacheClean = _expectedNextCacheClean.AddSeconds(SecondsForClean);
 
-            int i = 0;
+            var i = 0;
             do
             {
                 if (_cache[i].Expiration < now)
@@ -104,18 +103,13 @@ namespace SimpleWebApiServer
             Logger.Debug($"Cache Size: {_cache.Count} after clean");
         }
 
-        private void ResetCache()
-        {
-            _cache.Clear();
-        }
-
         private void SetValue(int key,string source, string value)
         {
-            if (_cache.Count >= _cacheSize)
+            if (_cache.Count >= CacheSize)
             {
                 _cache.RemoveAt(0);
             }
-            _cache.Add(new CachedItem(key, source, value, DateTime.Now.AddSeconds(_secondsInCache)));
+            _cache.Add(new CachedItem(key, source, value, DateTime.Now.AddSeconds(SecondsInCache)));
         }
     }
 }
