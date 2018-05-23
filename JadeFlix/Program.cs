@@ -18,10 +18,11 @@ namespace JadeFlix
             try
             {
                 AppContext.Initialize();
-                var port = GetIntArgument(args,1);
-                var ip = GetStringArgument(args,0);
-                var urlPrefix = GetStringArgument(args,2);
-                var debug = GetStringArgument(args,3);
+                PrintConfig();
+                var port = GetIntArgument(args, 1);
+                var ip = GetStringArgument(args, 0);
+                var urlPrefix = GetStringArgument(args, 2);
+                var debug = GetStringArgument(args, 3);
 
                 if (debug.ToLower().EndsWith("debug"))
                 {
@@ -32,7 +33,7 @@ namespace JadeFlix
 
                 RegisterRequestHandlers(server);
                 RegisterMediaScrapers();
-                
+
                 server.Run();
                 Logger.Debug($"Listening at {ip}:{port} with urlPrefix {urlPrefix}");
                 Logger.Debug("Press Ctrl+C to exit ...");
@@ -42,6 +43,17 @@ namespace JadeFlix
             {
                 Logger.Debug("General failure exception: " + ex.Message);
             }
+        }
+
+        private static void PrintConfig()
+        {
+            Logger.Debug("** CONFIG **");
+            Logger.Debug($"file cache path:    {AppContext.Config.FilesCachePath}");
+            Logger.Debug($"www cache path:     {AppContext.Config.WwwCachePath}");
+            Logger.Debug($"file media path:    {AppContext.Config.MediaPath}");
+            Logger.Debug($"www media path:     {AppContext.Config.WwwMediaPath}");
+            Logger.Debug($"Video file pattern: {AppContext.Config.VideoFilePattern}");
+            Logger.Debug("************");
         }
 
         private static string GetStringArgument(string[] arguments, int index)

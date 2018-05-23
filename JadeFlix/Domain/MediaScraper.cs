@@ -8,7 +8,7 @@ namespace JadeFlix.Domain
 {
     public abstract class MediaScraper
     {
-        MemoryCache<string> _contentCache;
+        private readonly MemoryCache<string> _contentCache;
         protected MediaScraper(string name, EntryType kind, Uri baseUrl, TimeSpan contentCache, int maxCacheEntries = 5)
         {
             Name = name;
@@ -23,23 +23,19 @@ namespace JadeFlix.Domain
             Kind = kind;
             _contentCache = null;
         }
-        public string Name { get; internal set; }
-        public Uri BaseUrl { get; internal set; }
-        public EntryType Kind { get; internal set; }
-        public string KindName { get { return Kind.ToString(); } }
+        public string Name { get; private set; }
+        protected Uri BaseUrl { get; private set; }
+        private EntryType Kind { get; set; }
+        public string KindName => Kind.ToString();
+
         protected async Task<string> GetContentsAsync(Uri url)
         {
-            if (_contentCache != null)
+            if (_contentCache == null)
             {
-                var data = _contentCache.GetOrAdd(url.ToString(), () => { return string.Empty; });
-                if (data == string.Empty)
-                {
-                    data = await AppContext.Web.GetAsync(url);
-                    _contentCache.AddOrUpdate(url.ToString(), data);
-                }
-                return data;
+                return await AppContext.Web.GetAsync(url);
             }
-            return await AppContext.Web.GetAsync(url);
+            var data = await _contentCache.GetOrAddAsync(url.ToString(), () => AppContext.Web.GetAsync(url));
+            return data;
         }
 
         public abstract Task<IEnumerable<NamedUri>> GetMediaUrlsAsync(Uri url);
@@ -47,7 +43,8 @@ namespace JadeFlix.Domain
         public abstract Task<List<CatalogItem>> FindAsync(string name);
         public abstract Task<List<CatalogItem>> GetRecentAsync();
         public abstract Task<string> GetMediaDownloadUrlAsync(Uri url);
-        public string ConcatToBaseUrl(string partialUrl)
+
+        protected string ConcatToBaseUrl(string partialUrl)
         {
             return BaseUrl.ToString().TrimEnd('/') + "/" + partialUrl.TrimStart('/');
         }

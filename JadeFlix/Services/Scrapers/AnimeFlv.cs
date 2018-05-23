@@ -12,7 +12,7 @@ namespace JadeFlix.Services.Scrapers
     public class AnimeFlv : MediaScraper
     {
         
-        public AnimeFlv() : base("AnimeFlv", EntryType.Multi, new Uri("http://animeflv.net/"), new TimeSpan(0, 10, 0))
+        public AnimeFlv() : base("AnimeFlv", EntryType.Multi, new Uri("https://animeflv.net/"), new TimeSpan(0, 10, 0))
         {
         }
         public override async Task<List<CatalogItem>> GetRecentAsync()
@@ -231,7 +231,7 @@ namespace JadeFlix.Services.Scrapers
             item.Preview = item.Banner;
             item.Kind = GetItemType(content);
             item.Name = content.Between("Title\">", "<");
-            item.Poster = LocalScraper.GetItemPoster(item, item.Poster);
+            item.Poster = LocalScraper.GetItemPoster(item, item.Banner);
 
             FillCustomProperties(item, content);
 

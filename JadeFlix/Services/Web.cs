@@ -5,6 +5,7 @@ using System.Text;
 using Jadeflix.Services.Protections.CloudFare;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Logging;
 
 namespace JadeFlix.Services
 {
@@ -31,7 +32,9 @@ namespace JadeFlix.Services
 
         public async Task<string> GetAsync(Uri url, bool buffered = true)
         {
+            Logger.Debug($"Web GetAsync: {url}");
             var result = await _client.GetStringAsync(url);
+            Logger.Debug($"Web Data Getted");
             return result;
         }
         public async Task<string> PostJson(Uri url, string content)

@@ -2,14 +2,15 @@
 using JadeFlix.Domain;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace JadeFlix.Services
 {
     public class MemoryCache<T> where T:class
     {
-        TimeSpan _cacheTime;
-        Dictionary<string, CacheEntry<T>> _cache;
-        int _maxEntries;
+        private readonly TimeSpan _cacheTime;
+        private readonly Dictionary<string, CacheEntry<T>> _cache;
+        private readonly int _maxEntries;
         public MemoryCache(TimeSpan cacheTime, int maxEntries=5)
         {
             _maxEntries = maxEntries;
@@ -30,10 +31,28 @@ namespace JadeFlix.Services
             }
             var data = obtainData.Invoke();
             AddOrUpdate(key, data);
+
+            return data;
+        }
+        public async Task<T> GetOrAddAsync(string key, Func<Task<T>> obtainData)
+        {
+            if (_cache.ContainsKey(key))
+            {
+                var entry = _cache[key];
+                if (entry.CatchUntil > DateTime.Now)
+                {
+                    Logger.Debug("Content served from cache");
+                    return entry.Data;
+                }
+            }
+            var data = await obtainData.Invoke();
+            AddOrUpdate(key, data);
+
             return data;
         }
 
-        public void AddOrUpdate(string key, T data)
+
+        private void AddOrUpdate(string key, T data)
         {
             if (_cache.ContainsKey(key))
             {
@@ -43,6 +62,11 @@ namespace JadeFlix.Services
             }
             else
             {
+                if (data == default(T) || string.IsNullOrEmpty(data?.ToString()))
+                {
+                    return;
+                }
+
                 if (_maxEntries >= _cache.Count)
                 {
                     _cache.Remove(GetOldestEntry());

@@ -7,10 +7,17 @@ namespace JadeFlix.Domain
     [Serializable]
     public class Configuration
     {
-        public string FilesCachePath { get; }
-        public string WwwCachePath { get; }
-        public string MediaPath { get; }
-        public string WwwMediaPath { get; }
+        //
+        //Disable suggestions, get set needed to deserialize object
+        //
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string FilesCachePath { get; set; }
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string WwwCachePath { get; set; }
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string MediaPath { get; set; }
+        // ReSharper disable once MemberCanBePrivate.Global
+        public string WwwMediaPath { get; set; }
         [JsonIgnore]
         public string VideoFilePattern = "*.mp4|*.mkv|*.avi|*.divx|*.flv";
 
