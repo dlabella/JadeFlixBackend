@@ -1,16 +1,13 @@
 ﻿using Newtonsoft.Json;
 using SimpleWebApiServer.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace SimpleWebApiServer
 {
     public abstract class ApiRequestResponse<TParams> : IApiRequestResponse
     {
-        private const string UrlTokenPatternRegex = "(\\{.*\\})";
         private readonly List<int> _parameterIndexes = new List<int>();
 
         protected ApiRequestResponse(string urlPattern, HttpListenerRequestCache cache=null)
@@ -31,15 +28,6 @@ namespace SimpleWebApiServer
         public abstract string HttpMethod { get; }
         public string UrlPattern { get; }
 
-        private static string StripPatternFromUrl(string url)
-        {
-            return Regex.Replace(url, UrlTokenPatternRegex, "").ToLower();
-        }
-
-        public static string StripPatternFromUrl(Uri url)
-        {
-            return StripPatternFromUrl(url.ToString());
-        }
         public virtual bool IsCacheable => true;
         public async Task<string> GetRequestAsync(HttpListenerRequest request, RequestParameters parameters)
         {
@@ -67,6 +55,7 @@ namespace SimpleWebApiServer
         {
             return JsonConvert.DeserializeObject<T>(json);
         }
-        public abstract TParams ParseParameters(RequestParameters parameters);
+
+        protected abstract TParams ParseParameters(RequestParameters parameters);
     }
 }

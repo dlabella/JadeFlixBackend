@@ -6,16 +6,16 @@ namespace SimpleWebApiServer
 {
     internal static class Responses
     {
-        private static NotFoundResponse _notFound = new NotFoundResponse();
-        private static InternalServerError internalServerError = new InternalServerError();
+        private static readonly NotFoundResponse NotFoundresponse = new NotFoundResponse();
+        private static readonly InternalServerError InternalServerErrorResponse = new InternalServerError();
         public static string NotFound(HttpListenerRequest req, RequestParameters parameters)
         {
-            return _notFound.GetResponse(req, parameters);
+            return NotFoundresponse.GetResponse(req, parameters);
         }
         public static string InternalServerError(HttpListenerRequest req, RequestParameters parameters, Exception ex)
         {
             parameters.QueryParameters.Add("&Exception", ex.Message);
-            return internalServerError.GetResponse(req, parameters);
+            return InternalServerErrorResponse.GetResponse(req, parameters);
         }
     }
 }

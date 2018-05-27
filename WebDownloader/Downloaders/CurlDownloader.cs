@@ -30,7 +30,7 @@ namespace WebDownloader.Downloaders
             DownloadCompletedEventHandler downloadCompleted = null)
         {
 
-            string outputFilePath = filePath.ToSafePath();
+            var outputFilePath = filePath.ToSafePath();
 
             var downloadInfo = new CurlDownloadInfo(id, outputFilePath, url, cookies, disableTracking, downloadChanged, downloadCompleted);
 
@@ -41,7 +41,7 @@ namespace WebDownloader.Downloaders
                 downloadInfo.GetCommadArguments(),
                 true,
                 (data) => HandleDownloadFeedback(data, downloadInfo),
-                (error) => HandleDownloadError(error),
+                HandleDownloadError,
                 (exitCode) => HandleDownloadCompleted(exitCode, downloadInfo));
         }
         private static void PrepareOutputDirectory(string filePath)
@@ -86,9 +86,9 @@ namespace WebDownloader.Downloaders
             downloadInfo.DownloadCompleted?.Invoke(null, new DownloadCompletedEventArgs(di));
         }
 
-        private void HandleDownloadError(string line)
+        private static void HandleDownloadError(string line)
         {
-            Logger.Debug("Download Error: " + line);
+            Logger.Exception("Download Error: " + line);
         }
     }
 }

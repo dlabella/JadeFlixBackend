@@ -57,9 +57,9 @@ namespace SimpleWebApiServer
             return _cache.Where(x => x.Source.Contains(sourceFilter));
         }
 
-        public bool TryRemoveCachedItem(CachedItem item)
+        public void TryRemoveCachedItem(CachedItem item)
         {
-            return _cache.Remove(item);
+            _cache?.Remove(item);
         }
 
         private string GetValue(int key)

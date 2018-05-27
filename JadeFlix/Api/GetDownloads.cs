@@ -16,7 +16,7 @@ namespace JadeFlix.Api
             return ToJson(downloads);
         }
 
-        public override EmptyApiParameters ParseParameters(RequestParameters parameters)
+        protected override EmptyApiParameters ParseParameters(RequestParameters parameters)
         {
             return new EmptyApiParameters();
         }

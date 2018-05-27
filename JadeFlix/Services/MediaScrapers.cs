@@ -6,7 +6,7 @@ namespace JadeFlix.Services
 {
     public class MediaScrapers
     {
-        private Dictionary<string, MediaScraper> _scrapers;
+        private readonly Dictionary<string, MediaScraper> _scrapers;
         public MediaScrapers()
         {
             _scrapers = new Dictionary<string, MediaScraper>(StringComparer.OrdinalIgnoreCase);
@@ -17,14 +17,7 @@ namespace JadeFlix.Services
         }
         public MediaScraper Get(string name)
         {
-            if (_scrapers.ContainsKey(name))
-            {
-                return _scrapers[name];
-            }
-            else
-            {
-                return null;
-            }
+            return _scrapers.ContainsKey(name) ? _scrapers[name] : null;
         }
     }
 }

@@ -4,7 +4,7 @@ namespace SimpleWebApiServer
 {
     public abstract class ServerResponse
     {
-        public ServerResponse(int code)
+        protected ServerResponse(int code)
         {
             Code = code;
         }

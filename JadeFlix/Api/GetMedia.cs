@@ -12,7 +12,7 @@ namespace JadeFlix.Api
     {
         public GetMedia(HttpListenerRequestCache cache = null) : base("/api/getMedia/{scraper}/{episode_uid}",cache) { }
 
-        public override GetMediaApiParameters ParseParameters(RequestParameters parameters)
+        protected override GetMediaApiParameters ParseParameters(RequestParameters parameters)
         {
             return new GetMediaApiParameters()
             {

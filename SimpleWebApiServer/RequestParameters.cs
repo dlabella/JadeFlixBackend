@@ -19,10 +19,6 @@ namespace SimpleWebApiServer
             return QueryParameters.ContainsKey(parameter) ? QueryParameters[parameter] : string.Empty;
         }
 
-        public RequestParameters(IDictionary<string, string> urlParameters)
-        {
-            UrlParameters = new Dictionary<string, string>(urlParameters, StringComparer.OrdinalIgnoreCase);
-        }
         public RequestParameters(IDictionary<string, string> urlParameters, IDictionary<string, string> queryParameters)
         {
             UrlParameters = new Dictionary<string, string>(urlParameters, StringComparer.OrdinalIgnoreCase);

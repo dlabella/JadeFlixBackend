@@ -14,11 +14,9 @@ namespace SimpleWebApiServer
     public class WebServer
     {
         private readonly HttpListener _listener = new HttpListener();
-        private static HttpListenerRequestCache _requestCache;
-        private List<IApiRequestResponse> _requestHandlers;
-        private Requesturl _urlParser;
-
-        private string _urlPrefix;
+        private readonly List<IApiRequestResponse> _requestHandlers;
+        private readonly Requesturl _urlParser;
+        private readonly string _urlPrefix;
 
         public WebServer(string ip, int port, string urlPrefix = null)
         {
@@ -30,7 +28,7 @@ namespace SimpleWebApiServer
                     _urlPrefix = urlPrefix + "/";
                 }
             }
-            _requestCache = new HttpListenerRequestCache(_urlPrefix);
+            Cache = new HttpListenerRequestCache(_urlPrefix);
 
             string prefix = "http://" + ip + ":" + port + "/";
 
@@ -47,7 +45,7 @@ namespace SimpleWebApiServer
             _listener.Start();
         }
 
-        public HttpListenerRequestCache Cache { get { return _requestCache; } }
+        public static HttpListenerRequestCache Cache { get; private set; }
 
         public void RegisterRequestHandler(IApiRequestResponse requestHandler)
         {
@@ -55,7 +53,7 @@ namespace SimpleWebApiServer
             _requestHandlers.Add(requestHandler);
             if (!requestHandler.IsCacheable)
             {
-                _requestCache.AddNonCacheableRequest(requestHandler.UrlPattern);
+                Cache.AddNonCacheableRequest(requestHandler.UrlPattern);
             }
         }
 
@@ -81,7 +79,7 @@ namespace SimpleWebApiServer
             return Responses.NotFound(request, new RequestParameters());
         }
 
-        private string JoinUrlPath(string a, string b)
+        private static string JoinUrlPath(string a, string b)
         {
             if (a.EndsWith("/") && b.StartsWith("/"))
             {
@@ -110,9 +108,9 @@ namespace SimpleWebApiServer
             response.AppendHeader("Access-Control-Max-Age", "86400");
             response.AppendHeader("Access-Control-Allow-Headers", "*");
         }
-        private async Task<string> GetPostDataAsync(HttpListenerRequest request)
+        private static async Task<string> GetPostDataAsync(HttpListenerRequest request)
         {
-            string data = string.Empty;
+            var data = string.Empty;
             try
             {
                 if (request.HasEntityBody)
@@ -152,7 +150,7 @@ namespace SimpleWebApiServer
                     }
                     else if (!ctx.Request.RawUrl.EndsWith("favicon.ico"))
                     {
-                        var responseStr = await _requestCache.GetRequest(ctx.Request, (req) => HandleRequest(req));
+                        var responseStr = await Cache.GetRequest(ctx.Request, HandleRequest);
                         sw.Stop();
                         var buf = Encoding.UTF8.GetBytes(responseStr);
 
@@ -167,12 +165,8 @@ namespace SimpleWebApiServer
                 {
                     foreach (var ex in agex.InnerExceptions)
                     {
-                        Logger.Debug("EXCEPTION: " + ex.Message);
+                        Logger.Exception("EXCEPTION: " + ex.Message);
                     }
-                    //var errorResponse = Responses.InternalServerError(ctx.Request, GetRequestParameters(ctx.Request), ex);
-                    //var errorBuf = Encoding.UTF8.GetBytes(errorResponse);
-                    //ctx.Response.ContentLength64 = errorBuf.Length;
-                    //ctx.Response.OutputStream.Write(errorBuf, 0, errorBuf.Length);
                 }
                 finally
                 {
@@ -182,7 +176,7 @@ namespace SimpleWebApiServer
             }
         }
 
-        public void Stop()
+        private void Stop()
         {
             _listener.Stop();
             _listener.Close();

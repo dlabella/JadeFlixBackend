@@ -21,7 +21,6 @@ namespace Common
                     invalidFileChars.Add(invalidDirChar);
                 }
             }
-            //clean bad filename chars  
             foreach (var badChar in invalidFileChars)
             {
                 toCleanPath = toCleanPath.Replace(badChar.ToString(), replaceWith);
@@ -33,12 +32,12 @@ namespace Common
             return toCleanPath;
         }
 
-        public static string ToSafePath(this string toCleanPath, string replaceWith = "-")
+        public static string ToSafePath(this string toCleanPath)
         {
-            StringBuilder safePath = new StringBuilder();
-            string[] pathParts = toCleanPath.Split(new [] { PathSeparator });
-            int i = 0;
-            int lastPart = (pathParts.Length - 1);
+            var safePath = new StringBuilder();
+            var pathParts = toCleanPath.Split(new [] { PathSeparator });
+            var i = 0;
+            var lastPart = (pathParts.Length - 1);
             foreach(var part in pathParts)
             {
                 if (i==0 && part.EndsWith(":"))
@@ -131,16 +130,6 @@ namespace Common
             return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
-        private static char PathSeparator 
-        {
-            get
-            {
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                {
-                    return '\\';
-                }
-                return '/';
-            }
-        }
+        private static char PathSeparator => Environment.OSVersion.Platform == PlatformID.Win32NT ? '\\' : '/';
     }
 }

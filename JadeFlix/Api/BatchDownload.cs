@@ -15,7 +15,6 @@ namespace JadeFlix.Api
 {
     public class BatchDownload : ApiGetRequestResponse<BatchApiParams>
     {
-        //private static ConcurrentDictionary<string, string> _itemsProcessing = new ConcurrentDictionary<string, string>();
         public BatchDownload(HttpListenerRequestCache cache = null) : base("/api/batchDownload", cache) { }
         public override bool IsCacheable => false;
 
@@ -57,18 +56,18 @@ namespace JadeFlix.Api
         {
             Logger.Debug("Getting media urls of " + item.Name);
             var mediaUrl = (await apiParams.Scraper.GetMediaUrlsAsync(item.Url)).FirstOrDefault();
-            if (mediaUrl != null)
+            if (mediaUrl == null)
             {
-                var downloadUrl = await apiParams.Scraper.GetMediaDownloadUrlAsync(mediaUrl.Url);
-                var file = tvshow.GetMediaPath(item.GetFileName());
-                Logger.Debug("Enqueuing download: " + item.GetFileName());
-                AppContext.FileDownloader.Enqueue(item.UId, file, new Uri(downloadUrl), Web.CookieContainer);
-                return true;
+                return false;
             }
-            return false;
+            var downloadUrl = await apiParams.Scraper.GetMediaDownloadUrlAsync(mediaUrl.Url);
+            var file = tvshow.GetMediaPath(item.GetFileName());
+            Logger.Debug("Enqueuing download: " + item.GetFileName());
+            AppContext.FileDownloader.Enqueue(item.UId, file, new Uri(downloadUrl), Web.CookieContainer);
+            return true;
         }
 
-        public override BatchApiParams ParseParameters(RequestParameters parameters)
+        protected override BatchApiParams ParseParameters(RequestParameters parameters)
         {
             return new BatchApiParams
             {

@@ -5,10 +5,7 @@ namespace SimpleWebApiServer
 {
     internal class Requesturl
     {
-        string _baseUrl = string.Empty;
-        public Requesturl()
-        {
-        }
+        private readonly string _baseUrl;
 
         public Requesturl(string baseUrl)
         {
@@ -80,20 +77,21 @@ namespace SimpleWebApiServer
             var result = new Dictionary<string, string>();
 
             var start = url.IndexOf("?", StringComparison.Ordinal);
-            if (start > 0)
+            if (start < 0)
             {
-                var queryString = url.Substring(start + 1);
-                foreach (var p in queryString.Split("&"))
+                return result;
+            }
+            var queryString = url.Substring(start + 1);
+            foreach (var p in queryString.Split("&"))
+            {
+                if (p.Contains("="))
                 {
-                    if (p.Contains("="))
-                    {
-                        var value = p.Split("=", 2, StringSplitOptions.RemoveEmptyEntries);
-                        result.Add(value[0], value[1]);
-                    }
-                    else
-                    {
-                        result.Add(p, string.Empty);
-                    }
+                    var value = p.Split("=", 2, StringSplitOptions.RemoveEmptyEntries);
+                    result.Add(value[0], value[1]);
+                }
+                else
+                {
+                    result.Add(p, string.Empty);
                 }
             }
             return result;

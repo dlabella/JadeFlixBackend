@@ -13,7 +13,7 @@ namespace JadeFlix.Api
             
         }
 
-        public override GetRecentApiParameters ParseParameters(RequestParameters parameters)
+        protected override GetRecentApiParameters ParseParameters(RequestParameters parameters)
         {
             return new GetRecentApiParameters()
             {

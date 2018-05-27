@@ -13,9 +13,9 @@ namespace SimpleWebApiServer
             Value = value;
             Expiration = expiration;
         }
-        public int Id { get; set; }
-        public string Source { get; set; }
+        public int Id { get; private set; }
+        public string Source { get; private set; }
         public string Value { get; set; }
-        public DateTime Expiration { get; set; }
+        public DateTime Expiration { get; private set; }
     }
 }

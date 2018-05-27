@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
 
 namespace Common.Logging
 {
@@ -18,6 +20,10 @@ namespace Common.Logging
             {
                 Trace.WriteLine("[DEBUG] " + log);
             }
+        }
+        public static void Exception(string log)
+        {
+            File.AppendAllText("Jadeflix.error.log",log);
         }
     }
 }

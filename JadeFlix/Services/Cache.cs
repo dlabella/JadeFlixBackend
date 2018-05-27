@@ -17,23 +17,7 @@ namespace JadeFlix.Services
             _cacheTime = cacheTime;
             _cache = new Dictionary<string, CacheEntry<T>>(maxEntries, StringComparer.OrdinalIgnoreCase);
         }
-        
-        public T GetOrAdd(string key, Func<T> obtainData)
-        {
-            if (_cache.ContainsKey(key))
-            {
-                var entry = _cache[key];
-                if (entry.CatchUntil > DateTime.Now)
-                {
-                    Logger.Debug("Content served from cache");
-                    return entry.Data;
-                }
-            }
-            var data = obtainData.Invoke();
-            AddOrUpdate(key, data);
 
-            return data;
-        }
         public async Task<T> GetOrAddAsync(string key, Func<Task<T>> obtainData)
         {
             if (_cache.ContainsKey(key))
@@ -62,7 +46,7 @@ namespace JadeFlix.Services
             }
             else
             {
-                if (data == default(T) || string.IsNullOrEmpty(data?.ToString()))
+                if (data == default(T) || string.IsNullOrEmpty(data.ToString()))
                 {
                     return;
                 }
@@ -84,7 +68,7 @@ namespace JadeFlix.Services
         private string GetOldestEntry()
         {
             CacheEntry<T> oldest=null;
-            string oldestKey = string.Empty;
+            var oldestKey = string.Empty;
             foreach(var entry in _cache)
             {
                 if (oldest == null)

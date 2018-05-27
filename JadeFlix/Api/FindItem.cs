@@ -25,7 +25,7 @@ namespace JadeFlix.Api
             return ToJson(entries);
         }
 
-        public override FindItemApiParamters ParseParameters(RequestParameters parameters)
+        protected override FindItemApiParamters ParseParameters(RequestParameters parameters)
         {
             return new FindItemApiParamters()
             {

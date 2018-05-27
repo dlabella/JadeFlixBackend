@@ -8,7 +8,8 @@ namespace SimpleWebApiServer
     {
         public override string HttpMethod => "POST";
         public override bool IsCacheable => false;
-        public ApiPostRequestResponse(string urlPattern, HttpListenerRequestCache cache = null) : base(urlPattern, cache)
+
+        protected ApiPostRequestResponse(string urlPattern, HttpListenerRequestCache cache = null) : base(urlPattern, cache)
         {
         }
         protected override async Task<string> ProcessGetRequest(HttpListenerRequest request, TParams parameters)

@@ -39,7 +39,7 @@ namespace JadeFlix.Api
         {
             var sessionResponse = new SessionResponse();
             Console.WriteLine($@"Creating new session key: {sessionKey}");
-            SessionData.AddOrUpdate(sessionKey, apiParams.Value, (oldItem, newItem) => { return apiParams.Value; });
+            SessionData.AddOrUpdate(sessionKey, apiParams.Value, (oldItem, newItem) => apiParams.Value);
             sessionResponse.Result = "200";
 
             return sessionResponse;
@@ -65,7 +65,7 @@ namespace JadeFlix.Api
             return sessionId + "/" + request?.RemoteEndPoint?.Address + "/" + key;
         }
 
-        public override SessionApiParams ParseParameters(RequestParameters parameters)
+        protected override SessionApiParams ParseParameters(RequestParameters parameters)
         {
             return new SessionApiParams
             {

@@ -25,7 +25,10 @@ namespace JadeFlix.Api
 
             if (apiParams.OnlyLocal || scraper == null)
             {
-                if (localEntry == null) return string.Empty;
+                if (localEntry == null) 
+                {
+                    return string.Empty;
+                }
                 return ToJson(localEntry);
             }
             else
@@ -49,7 +52,7 @@ namespace JadeFlix.Api
             return entry;
         }
 
-        private async Task SyncEntries(CatalogItem local, CatalogItem remote)
+        private static async Task SyncEntries(CatalogItem local, CatalogItem remote)
         {
             if (LocalScraper.Compare(local, remote) != 0)
             {
@@ -58,7 +61,8 @@ namespace JadeFlix.Api
                 await LocalScraper.SaveAsync(remote);
             }
         }
-        public override GetItemApiParameters ParseParameters(RequestParameters parameters)
+
+        protected override GetItemApiParameters ParseParameters(RequestParameters parameters)
         {
             return new GetItemApiParameters()
             {

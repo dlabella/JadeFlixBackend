@@ -1,5 +1,6 @@
 ﻿using Common.Logging;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -15,17 +16,13 @@ namespace JadeFlix.Services
 {
     public class DownloadManager
     {
-        private ConcurrentQueue<DownloadInfo> _queue = new ConcurrentQueue<DownloadInfo>();
-
-        private static ConcurrentDictionary<string, DownloadInfo> _activeDownloads = new ConcurrentDictionary<string, DownloadInfo>();
-
+        private readonly ConcurrentQueue<DownloadInfo> _queue = new ConcurrentQueue<DownloadInfo>();
+        private static readonly ConcurrentDictionary<string, DownloadInfo> ActiveDownloads = new ConcurrentDictionary<string, DownloadInfo>();
         private const int MaxParallelDownloads = 2;
-
-        YtDownloader _downloader;
+        private readonly YtDownloader _downloader;
 
         public DownloadManager()
         {
-            //_downloader = new CurlDownloader();
             _downloader = new YtDownloader();
         }
 
@@ -42,7 +39,7 @@ namespace JadeFlix.Services
             }
         }
 
-        private DownloadInfo BuildDownloadInfo(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool isQueued = true, bool disableTracking = false)
+        private static DownloadInfo BuildDownloadInfo(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool isQueued = true, bool disableTracking = false)
         {
             var di = new DownloadInfo(id, filePath, url, isQueued, disableTracking);
 
@@ -55,36 +52,33 @@ namespace JadeFlix.Services
 
         private bool EnqueueDownload(DownloadInfo downloadInfo, bool forceDownload)
         {
-            if (_queue.Any(x => x.Id == downloadInfo.Id))
+            if (_queue.Any(x => x.Id == downloadInfo.Id) ||
+                ActiveDownloads.ContainsKey(downloadInfo.Id) && !forceDownload)
             {
                 return false;
             }
-            if (!_activeDownloads.ContainsKey(downloadInfo.Id) || forceDownload)
-            {
-                _queue.Enqueue(downloadInfo);
-                return true;
-            }
-            return false;
+            _queue.Enqueue(downloadInfo);
+            return true;
         }
 
-        public DownloadInfo DequeueDownload()
+        private DownloadInfo DequeueDownload()
         {
-            if (_queue.Count > 0)
+            if (_queue.Count <= 0)
             {
-                _queue.TryDequeue(out DownloadInfo item);
-                item.IsQueued = false;
-                return item;
+                return null;
             }
-            return null;
+            _queue.TryDequeue(out var item);
+            item.IsQueued = false;
+            return item;
         }
 
-        public void ProcessQueue()
+        private void ProcessQueue()
         {
             if (!CanProcessNextQueueItem())
             {
                 Logger.Debug("Cannot process next item");
                 Logger.Debug("Queue Count: " + _queue.Count);
-                Logger.Debug("Active downloads: " + _activeDownloads.Values.Count(x => !x.IsQueued));
+                Logger.Debug("Active downloads: " + ActiveDownloads.Values.Count(x => !x.IsQueued));
                 return;
             }
             try
@@ -104,18 +98,17 @@ namespace JadeFlix.Services
         private bool CanProcessNextQueueItem()
         {
             if (_queue.Count == 0) return false;
-            if (_activeDownloads.Values.Count(x => !x.IsQueued) >= MaxParallelDownloads) return false;
-            return true;
+            return ActiveDownloads.Values.Count(x => !x.IsQueued) < MaxParallelDownloads;
         }
         public IEnumerable<DownloadInfo> GetDownloads()
         {
-            var active = new List<DownloadInfo>(_activeDownloads.Values);
+            var active = new List<DownloadInfo>(ActiveDownloads.Values);
             active.AddRange(_queue);
             return active;
         }
         private void ProcessDownload(DownloadInfo di)
         {
-            _activeDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
+            ActiveDownloads.AddOrUpdate(di.Id, di, (o, n) => di);
 
             _downloader.Download(di.Id, di.File.ToSafePath(), di.Source, GetCookieDictionary(di.Cookies), di.DisableTracking,
                UpdateActiveDownload,
@@ -123,30 +116,31 @@ namespace JadeFlix.Services
             );
         }
 
-        private Dictionary<string, string> GetCookieDictionary(CookieCollection cookies)
+        private static Dictionary<string, string> GetCookieDictionary(IEnumerable cookies)
         {
             var cookieDictionary = new Dictionary<string, string>();
-            if (cookies != null)
+            if (cookies == null)
             {
-                foreach (Cookie cookie in cookies)
-                {
-                    cookieDictionary.Add(cookie.Name, cookie.Value);
-                }
+                return cookieDictionary;
+            }
+            foreach (Cookie cookie in cookies)
+            {
+                cookieDictionary.Add(cookie.Name, cookie.Value);
             }
             return cookieDictionary;
         }
 
         private void ActiveDownloadCompleted(object sender, DownloadCompletedEventArgs e)
         {
-            _activeDownloads.TryRemove(e.Info.Id, out _);
+            ActiveDownloads.TryRemove(e.Info.Id, out _);
             ProcessQueue();
 
             Logger.Debug("Download of " + e.Info.File + " is completed");
         }
 
-        private void UpdateActiveDownload(object sender, DownloadChangedEventArgs e)
+        private static void UpdateActiveDownload(object sender, DownloadChangedEventArgs e)
         {
-            _activeDownloads.AddOrUpdate(e.Info.Id, e.Info, (o, n) => e.Info);
+            ActiveDownloads.AddOrUpdate(e.Info.Id, e.Info, (o, n) => e.Info);
 
             if (e.Info.BytesReceived > 0 && e.Info.BytesTotal > 0)
             {
@@ -157,12 +151,5 @@ namespace JadeFlix.Services
                 Logger.Debug("??% - " + e.Info.File);
             }
         }
-    }
-    internal class DownloadItem
-    {
-        public string Id { get; set; }
-        public string FilePath { get; set; }
-        public Uri Url { get; set; }
-        public CookieCollection Cookies { get; set; }
     }
 }

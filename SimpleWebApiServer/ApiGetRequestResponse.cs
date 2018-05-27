@@ -6,7 +6,7 @@ namespace SimpleWebApiServer
 {
     public abstract class ApiGetRequestResponse<TParams> : ApiRequestResponse<TParams>
     {
-        public ApiGetRequestResponse(string urlPattern, HttpListenerRequestCache cache=null) : base(urlPattern, cache)
+        protected ApiGetRequestResponse(string urlPattern, HttpListenerRequestCache cache=null) : base(urlPattern, cache)
         {
         }
         public override string HttpMethod => "GET";

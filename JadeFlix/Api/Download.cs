@@ -26,7 +26,8 @@ namespace JadeFlix.Api
             await Task.Delay(10);
             return ToJson(new { status = 200 });
         }
-        public override DownloadApiParameters ParseParameters(RequestParameters parameters)
+
+        protected override DownloadApiParameters ParseParameters(RequestParameters parameters)
         {
             return new DownloadApiParameters()
             {

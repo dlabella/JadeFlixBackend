@@ -17,14 +17,14 @@ namespace JadeFlix.Api
         protected override async Task<string> ProcessPostRequest(HttpListenerRequest request, EmptyApiParameters parameters, string postData)
         {
             var item = FromJson<CatalogItem>(postData);
-            if (item != null)
+            if (item == null)
             {
-                await LocalScraper.SaveAsync(item);
-                UpdateCacheEntries(item);
-
-                return ToJson(new { status = "ok" });
+                return ToJson(new {status = "error"});
             }
-            return ToJson(new { status = "error" });
+            await LocalScraper.SaveAsync(item);
+            UpdateCacheEntries(item);
+
+            return ToJson(new { status = "ok" });
         }
 
         private void UpdateCacheEntries(CatalogItem item)
@@ -83,7 +83,7 @@ namespace JadeFlix.Api
             }
         }
 
-        public override EmptyApiParameters ParseParameters(RequestParameters parameters)
+        protected override EmptyApiParameters ParseParameters(RequestParameters parameters)
         {
             return new EmptyApiParameters();
         }

@@ -14,7 +14,7 @@ namespace JadeFlix.Api
         }
         public override bool IsCacheable => false;
 
-        public override GetLocalApiParameters ParseParameters(RequestParameters parameters)
+        protected override GetLocalApiParameters ParseParameters(RequestParameters parameters)
         {
             return new GetLocalApiParameters()
             {

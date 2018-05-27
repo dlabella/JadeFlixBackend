@@ -13,7 +13,7 @@ namespace JadeFlix.Api
     {
         public GetMediaUrl(HttpListenerRequestCache cache = null) : base("/api/getmediaurl/{scraper}/{media_uid}", cache) { }
 
-        public override GetMediaApiParameters ParseParameters(RequestParameters parameters)
+        protected override GetMediaApiParameters ParseParameters(RequestParameters parameters)
         {
             return new GetMediaApiParameters()
             {
@@ -30,12 +30,12 @@ namespace JadeFlix.Api
             }
             var scraper = AppContext.MediaScrapers.Get(parameters.ScraperId);
             var downloadUrl = await scraper.GetMediaDownloadUrlAsync(new Uri(parameters.Url));
-            if (!string.IsNullOrEmpty(downloadUrl))
+            if (string.IsNullOrEmpty(downloadUrl))
             {
-                Trace.WriteLine("Media Url: " + downloadUrl);
-                return ToJson(new NamedUri("Download", new Uri(downloadUrl)));
+                return string.Empty;
             }
-            return string.Empty;
+            Trace.WriteLine("Media Url: " + downloadUrl);
+            return ToJson(new NamedUri("Download", new Uri(downloadUrl)));
         }
     }
 }
