@@ -11,7 +11,7 @@ namespace JadeFlix.Services.Scrapers
 {
     public class AnimeFlv : MediaScraper
     {
-        
+
         public AnimeFlv() : base("AnimeFlv", EntryType.Multi, new Uri("https://animeflv.net/"), new TimeSpan(0, 10, 0))
         {
         }
@@ -21,7 +21,7 @@ namespace JadeFlix.Services.Scrapers
 
             var contents = await GetContentsAsync(BaseUrl);
             var items = contents.Between("ListEpisodios AX", "</ul>");
-            var catalogItems = (await ParseListItems(items)).Where( x=> x!=null && !string.IsNullOrEmpty(x.Name)).ToList();
+            var catalogItems = (await ParseListItems(items)).Where(x => x != null && !string.IsNullOrEmpty(x.Name)).ToList();
             return catalogItems;
         }
         public override async Task<CatalogItem> GetAsync(Uri url)
@@ -37,23 +37,7 @@ namespace JadeFlix.Services.Scrapers
             entry.Plot = content.Between("<div class=\"Description\">", "</div>").Between("<p>", "</p>");
             entry.ScrapedBy = Name;
 
-            var episodeList = content.Between("<ul class=\"ListCaps\"", "</ul>");
-            if (string.IsNullOrWhiteSpace(episodeList))
-            {
-                episodeList = content.Between("<ul class=\"ListEpisodes\"", "</ul>");
-            }
-            var idx = 0;
-            var episodes = new Dictionary<int, DownloadableNamedUri>();
-            do
-            {
-                var episode = episodeList.Between("<li", "</li>", ref idx);
-                var media = GetTvShowEpisode(episode);
-
-                if (media.Value != null && !episodes.ContainsKey(media.Key))
-                {
-                    episodes.Add(media.Key, new DownloadableNamedUri() { Url = media.Value.Url, Name = media.Value.Name });
-                }
-            } while (idx!=-1);
+            var episodes = GetEpisodes(content);
             entry.Media.Remote = episodes.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
 
             await DigestCatalogItem(entry);
@@ -61,7 +45,28 @@ namespace JadeFlix.Services.Scrapers
             return entry;
         }
 
-        private async Task DigestCatalogItem(CatalogItem item)
+        private Dictionary<int, DownloadableNamedUri> GetEpisodes(string content)
+        {
+            //var anime_info = ["2932", "Hinamatsuri", "hinamatsuri"];
+            //var episodes = [[12, 49416],[11, 49330],[10, 49261],[9, 49194],[8, 49126],[7, 49060],[6, 48995],[5, 48926],[4, 48859],[3, 48794],[2, 48734],[1, 48674]];
+            //var last_seen = 0;
+            var episodeItems = new Dictionary<int, DownloadableNamedUri>();
+            var data = content.Between("var anime_info", "var last_seen");
+            var baseData = data.Between("[", "];").Replace(" ", string.Empty).Replace("\"", string.Empty).Split(",");
+            var episodes = data.Between("episodes = [", "];").Replace(" ", string.Empty);
+            foreach (var episodePair in episodes.Split("],"))
+            {
+                var episodeData = episodePair.Replace("[", string.Empty).Split(',');
+                int.TryParse(episodeData[0], out var index);
+                var url = $"/ver/{episodeData[1]}/{baseData[2]}-{episodeData[0]}";
+                var uri = new Uri(ConcatToBaseUrl(url));
+                episodeItems.Add(index, new DownloadableNamedUri { Name = $"{data[1]} {episodeData[0]}", Url = uri });
+            }
+
+            return episodeItems;
+        }
+
+        private static async Task DigestCatalogItem(CatalogItem item)
         {
             item.Poster = LocalScraper.GetOrAddItemPoster(item, item.Poster);
             item.Banner = LocalScraper.GetOrAddItemBanner(item, item.Banner);
@@ -78,7 +83,7 @@ namespace JadeFlix.Services.Scrapers
             if (string.IsNullOrEmpty(content)) return default(KeyValuePair<int, NamedUri>);
 
             var media = new NamedUri();
-            int episodeIdx = -1;
+            var episodeIdx = -1;
             var url = content.Between("<a href=\"", "\"");
 
             if (string.IsNullOrEmpty(url) || !url.StartsWith('/')) return default(KeyValuePair<int, NamedUri>);
@@ -87,7 +92,7 @@ namespace JadeFlix.Services.Scrapers
             media.Name = content.Between("<h3 class=\"Title\">", "<");
             if (string.IsNullOrWhiteSpace(media.Name))
             {
-                media.Name = content.Between("<a","/a>").Between(">", "<");
+                media.Name = content.Between("<a", "/a>").Between(">", "<");
             }
             if (content.Contains("<p>Episodio"))
             {
@@ -97,13 +102,14 @@ namespace JadeFlix.Services.Scrapers
             else
             {
                 var startIdx = media.Url.ToString().LastIndexOf("-", StringComparison.Ordinal);
-                if (startIdx > 0)
+                if (startIdx <= 0)
                 {
-                    startIdx++;
-                    int.TryParse(media.Url.ToString().Substring(startIdx), out episodeIdx);
+                    return new KeyValuePair<int, NamedUri>(episodeIdx, media);
                 }
+                startIdx++;
+                int.TryParse(media.Url.ToString().Substring(startIdx), out episodeIdx);
             }
-            
+
             return new KeyValuePair<int, NamedUri>(episodeIdx, media);
         }
 
@@ -111,7 +117,7 @@ namespace JadeFlix.Services.Scrapers
         {
             var content = await GetContentsAsync(url);
             var options = content.Between("var video = [];", "$(document)");
-            int videoIdx = 0;
+            var videoIdx = 0;
             var handledMedia = GetHandledMediaUrls();
             var mediaUrls = new List<NamedUri>();
             do
@@ -123,18 +129,45 @@ namespace JadeFlix.Services.Scrapers
                 }
                 else
                 {
-                    videoUrl = options.Between("<iframe","<", ref videoIdx).Between("src=\"", "\"");
+                    videoUrl = options.Between("<iframe", "<", ref videoIdx).Between("src=\"", "\"");
                 }
-                if (!string.IsNullOrEmpty(videoUrl) && handledMedia.Any(x=>videoUrl.Contains(x)))
+                if (!string.IsNullOrEmpty(videoUrl) && handledMedia.Any(x => videoUrl.Contains(x)))
                 {
                     mediaUrls.Add(new NamedUri()
                     {
                         Name = videoUrl.Between("//", "/"),
                         Url = new Uri(videoUrl)
                     });
+
+                }
+                else if (videoUrl != null && videoUrl.Contains("redirector.php"))
+                {
+                    var redirectorUrl = ParseRedirectorUrl(videoUrl);
+                    mediaUrls.Add(new NamedUri
+                    {
+                        Name = redirectorUrl.Between("//", "/"),
+                        Url = new Uri(redirectorUrl)
+                    });
                 }
             } while (videoIdx != -1);
             return mediaUrls;
+        }
+
+        private static string ParseRedirectorUrl(string url)
+        {
+            var server = url.Between("server=", "&").ToLower();
+            var value = url.Between("value=", "\"");
+            switch (server)
+            {
+                case "mega":
+                    return string.Format("https://mega.nz/embed#{0}", value);
+                case "mango":
+                    return string.Format("https://streamango.com/embed/{0}", value);
+                case "openload":
+                    return string.Format("https://streamango.com/embed/{0}", value);
+                default:
+                    return string.Empty;
+            }
         }
 
         public override async Task<string> GetMediaDownloadUrlAsync(Uri url)
@@ -144,13 +177,14 @@ namespace JadeFlix.Services.Scrapers
             if (urlStr.Contains("efire.php"))
             {
                 var realUrl = GetEFireMediaUrl(contents);
-                if (!string.IsNullOrEmpty(realUrl))
+                if (string.IsNullOrEmpty(realUrl))
                 {
-                    var hoster = System.Text.RegularExpressions.Regex.Unescape(realUrl);
-                    if (hoster.Contains("mediafire.com"))
-                    {
-                        return await GetMediaFireUrlAsync(hoster);
-                    }
+                    return string.Empty;
+                }
+                var hoster = System.Text.RegularExpressions.Regex.Unescape(realUrl);
+                if (hoster.Contains("mediafire.com"))
+                {
+                    return await GetMediaFireUrlAsync(hoster);
                 }
             }
             else if (urlStr.Contains("rapidvideo.com"))
@@ -186,7 +220,7 @@ namespace JadeFlix.Services.Scrapers
             {
                 return string.Empty;
             }
-            return "http://download"+data;
+            return "http://download" + data;
         }
 
         private string GetEFireMediaUrl(string content)
@@ -196,9 +230,9 @@ namespace JadeFlix.Services.Scrapers
         }
         private async Task<string> GetRapidVideoUrlAsync(string content)
         {
-            var contentVideo = content.Between("og:url\" content=\"","\"");
+            var contentVideo = content.Between("og:url\" content=\"", "\"");
             var videoHtml = await GetContentsAsync(new Uri(contentVideo));
-            var videoUrl = videoHtml.Between("<video", "</video>").Between("<source src=\"","\"");
+            var videoUrl = videoHtml.Between("<video", "</video>").Between("<source src=\"", "\"");
             return videoUrl;
         }
 
@@ -221,11 +255,11 @@ namespace JadeFlix.Services.Scrapers
         private async Task<CatalogItem> ParseListItem(string content)
         {
             if (string.IsNullOrEmpty(content)) return null;
-            var item = new CatalogItem {ScrapedBy = Name};
+            var item = new CatalogItem { ScrapedBy = Name };
 
             var url = content.Between("<a href=\"", "\"").Replace("/ver/", "/anime/");
-            
-            
+
+
             item.Group = EntryGroup.Anime;
             item.Banner = ConcatToBaseUrl(content.Between("<img src=\"", "\""));
             item.Preview = item.Banner;
@@ -236,7 +270,7 @@ namespace JadeFlix.Services.Scrapers
             FillCustomProperties(item, content);
 
             var start = "/anime/".Length;
-            if (ItemHasEpisodes(item) && item.Kind==EntryType.TvShow)
+            if (ItemHasEpisodes(item) && item.Kind == EntryType.TvShow)
             {
                 item.Url = ConcatToBaseUrl(url.Substring(0, url.LastIndexOf('-')));
 
