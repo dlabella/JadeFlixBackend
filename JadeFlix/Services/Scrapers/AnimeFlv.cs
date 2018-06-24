@@ -60,7 +60,7 @@ namespace JadeFlix.Services.Scrapers
                 int.TryParse(episodeData[0], out var index);
                 var url = $"/ver/{episodeData[1]}/{baseData[2]}-{episodeData[0]}";
                 var uri = new Uri(ConcatToBaseUrl(url));
-                episodeItems.Add(index, new DownloadableNamedUri { Name = $"{data[1]} {episodeData[0]}", Url = uri });
+                episodeItems.Add(index, new DownloadableNamedUri { Name = $"{baseData[1]} {episodeData[0]}", Url = uri });
             }
 
             return episodeItems;
@@ -159,6 +159,8 @@ namespace JadeFlix.Services.Scrapers
             var value = url.Between("value=", "\"");
             switch (server)
             {
+                case "rv":
+                    return string.Format("https://www.rapidvideo.com/e/{0}&q=720p", value);
                 case "mega":
                     return string.Format("https://mega.nz/embed#{0}", value);
                 case "mango":
