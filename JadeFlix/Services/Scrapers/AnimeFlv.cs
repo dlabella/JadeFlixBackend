@@ -143,11 +143,14 @@ namespace JadeFlix.Services.Scrapers
                 else if (videoUrl != null && videoUrl.Contains("redirector.php"))
                 {
                     var redirectorUrl = ParseRedirectorUrl(videoUrl);
-                    mediaUrls.Add(new NamedUri
+                    if (redirectorUrl != string.Empty)
                     {
-                        Name = redirectorUrl.Between("//", "/"),
-                        Url = new Uri(redirectorUrl)
-                    });
+                        mediaUrls.Add(new NamedUri
+                        {
+                            Name = redirectorUrl.Between("//", "/"),
+                            Url = new Uri(redirectorUrl)
+                        });
+                    }
                 }
             } while (videoIdx != -1);
             return mediaUrls;
@@ -161,12 +164,12 @@ namespace JadeFlix.Services.Scrapers
             {
                 case "rv":
                     return string.Format("https://www.rapidvideo.com/e/{0}&q=720p", value);
-                case "mega":
-                    return string.Format("https://mega.nz/embed#{0}", value);
-                case "mango":
-                    return string.Format("https://streamango.com/embed/{0}", value);
-                case "openload":
-                    return string.Format("https://streamango.com/embed/{0}", value);
+                //case "mega":
+                //    return string.Format("https://mega.nz/embed#{0}", value);
+                //case "mango":
+                //    return string.Format("https://streamango.com/embed/{0}", value);
+                //case "openload":
+                //    return string.Format("https://streamango.com/embed/{0}", value);
                 default:
                     return string.Empty;
             }
