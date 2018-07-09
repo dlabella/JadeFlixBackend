@@ -150,6 +150,7 @@ namespace SimpleWebApiServer
                     }
                     else if (!ctx.Request.RawUrl.EndsWith("favicon.ico"))
                     {
+                        
                         var responseStr = await Cache.GetRequest(ctx.Request, HandleRequest);
                         sw.Stop();
                         var buf = Encoding.UTF8.GetBytes(responseStr);

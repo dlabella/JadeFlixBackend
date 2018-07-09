@@ -56,7 +56,7 @@ namespace JadeFlix.Services.Scrapers
             var episodes = data.Between("episodes = [", "];").Replace(" ", string.Empty);
             foreach (var episodePair in episodes.Split("],"))
             {
-                var episodeData = episodePair.Replace("[", string.Empty).Split(',');
+                var episodeData = episodePair.Replace("[", string.Empty).Replace("]", string.Empty).Split(',');
                 int.TryParse(episodeData[0], out var index);
                 var url = $"/ver/{episodeData[1]}/{baseData[2]}-{episodeData[0]}";
                 var uri = new Uri(ConcatToBaseUrl(url));

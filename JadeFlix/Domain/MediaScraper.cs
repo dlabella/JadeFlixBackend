@@ -1,6 +1,7 @@
 ﻿using JadeFlix.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using static JadeFlix.Domain.Enums;
 
@@ -30,12 +31,21 @@ namespace JadeFlix.Domain
 
         protected async Task<string> GetContentsAsync(Uri url)
         {
-            if (_contentCache == null)
+            try
             {
-                return await AppContext.Web.GetAsync(url);
+                if (_contentCache == null)
+                {
+                    return await AppContext.Web.GetAsync(url);
+                }
+
+                var data = await _contentCache.GetOrAddAsync(url.ToString(), () => AppContext.Web.GetAsync(url));
+                return data;
             }
-            var data = await _contentCache.GetOrAddAsync(url.ToString(), () => AppContext.Web.GetAsync(url));
-            return data;
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"GetContentAsync Error: {ex.Message}");
+                return string.Empty;
+            }
         }
 
         public abstract Task<IEnumerable<NamedUri>> GetMediaUrlsAsync(Uri url);
