@@ -2,6 +2,10 @@
 using SimpleWebApiServer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Mime;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
 using System.Threading;
 
@@ -10,24 +14,25 @@ namespace JadeFlix
     internal static class Program
     {
         private static readonly ManualResetEvent ResetEvent = new ManualResetEvent(false);
-
+        
         private static void Main(string[] args)
         {
             AssemblyLoadContext.Default.Unloading += SigTermEventHandler;
             Console.CancelKeyPress += CancelHandler;
-
+            System.AppDomain.CurrentDomain.UnhandledException += ProcessUnhandledException;
+            AppDomain.CurrentDomain.FirstChanceException += ProcessFirstChanceException;
             try
             {
                 AppContext.Initialize();
                 PrintConfig();
-                var port = GetIntArgument(args, 1);
                 var ip = GetStringArgument(args, 0);
+                var port = GetIntArgument(args, 1);
                 var urlPrefix = GetStringArgument(args, 2);
                 var debug = GetStringArgument(args, 3);
 
                 if (debug.ToLower().EndsWith("debug"))
                 {
-                    System.Diagnostics.Trace.Listeners.Add(new ConsoleTraceListener());
+                    Trace.Listeners.Add(new ConsoleTraceListener());
                 }
 
                 var server = new WebServer(ip, port, urlPrefix);
@@ -42,8 +47,18 @@ namespace JadeFlix
             }
             catch (Exception ex)
             {
-                Logger.Exception("General failure exception: " + ex.Message);
+                Logger.Exception("General failure exception: " + ex.Message, ex);
             }
+        }
+
+        private static void ProcessFirstChanceException(object sender, FirstChanceExceptionEventArgs e)
+        {
+            Logger.Exception("First chance exception", e.Exception);
+        }
+
+        private static void ProcessUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Logger.Exception("Unhandled exception", e.ExceptionObject as Exception);
         }
 
         private static void PrintConfig()
@@ -68,6 +83,7 @@ namespace JadeFlix
             {
                 return 0;
             }
+
             var num = GetStringArgument(arguments, index);
             return int.TryParse(num, out var inum) ? inum : 0;
         }

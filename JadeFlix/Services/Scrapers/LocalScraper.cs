@@ -35,7 +35,7 @@ namespace JadeFlix.Services.Scrapers
             }
             catch (Exception ex)
             {
-                Logger.Debug("Error while save catalog item data, ex:" + ex.Message);
+                Logger.Exception("Error while save catalog item data, ex:" + ex.Message, ex);
             }
         }
 

@@ -37,5 +37,6 @@ namespace JadeFlix.Api
             Trace.WriteLine("Media Url: " + downloadUrl);
             return ToJson(new NamedUri("Download", new Uri(downloadUrl)));
         }
+        
     }
 }

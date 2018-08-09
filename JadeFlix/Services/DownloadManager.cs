@@ -92,7 +92,7 @@ namespace JadeFlix.Services
             }
             catch (Exception ex)
             {
-                Logger.Debug("Download Exception: " + ex.Message);
+                Logger.Exception("Download Exception: " + ex.Message,ex);
             }
         }
         private bool CanProcessNextQueueItem()

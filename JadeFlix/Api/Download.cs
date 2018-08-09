@@ -22,6 +22,7 @@ namespace JadeFlix.Api
 
             Logger.Debug($"Equeuing download Name {apiParams.FiletPath.ToSafePath()} Url:{apiParams.Url}");
 
+            
             AppContext.FileDownloader.Enqueue(apiParams.Id, apiParams.FiletPath.ToSafePath(), new Uri(apiParams.Url), Web.CookieContainer);
             await Task.Delay(10);
             return ToJson(new { status = 200 });
@@ -40,5 +41,5 @@ namespace JadeFlix.Api
             };
         }
     }
-    
+
 }

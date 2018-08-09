@@ -6,6 +6,7 @@ using System.Linq;
 using static JadeFlix.Domain.Enums;
 using Common.Logging;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace JadeFlix.Services.Scrapers
 {
@@ -203,13 +204,37 @@ namespace JadeFlix.Services.Scrapers
             else if (urlStr.Contains("embed.php"))
             {
                 var checkUrl = urlStr.Replace("embed.php", "check.php");
-                var key = checkUrl.Between("key=", "&");
-                checkUrl = checkUrl.Replace(key, "");
                 var data = await GetContentsAsync(new Uri(checkUrl));
-                var realUrl = data.Between("\"file\":\"", "\"");
-                return realUrl;
+                if (string.IsNullOrEmpty(data))
+                {
+                    return string.Empty;
+                }
+                var fileUrl = data.Between("\"file\":\"", "\"");
+                Logger.Debug($"Raw Url: {fileUrl}"); 
+                var unmaskedUrl = await UnmaskUrl(new Uri(fileUrl));
+                Logger.Debug($"Unmasked Url: {unmaskedUrl}");
+                return unmaskedUrl.ToString();
             }
             return string.Empty;
+        }
+        private async Task<Uri> UnmaskUrl(Uri url)
+        {
+            var localUrl = url;
+            bool processRedirection = false;
+            do
+            {
+                processRedirection = false;
+                var headers = await AppContext.Web.GetHeadersAsync(localUrl);
+                if ((headers.Code == HttpStatusCode.Redirect ||
+                    headers.Code == HttpStatusCode.RedirectKeepVerb ||
+                    headers.Code == HttpStatusCode.RedirectMethod) &&
+                    url != headers.Headers.Location)
+                {
+                    localUrl = headers.Headers.Location;
+                    processRedirection = true;
+                }
+            } while (processRedirection);
+            return localUrl;
         }
 
         private List<string> GetHandledMediaUrls()
