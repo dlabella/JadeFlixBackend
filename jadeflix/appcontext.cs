@@ -17,7 +17,7 @@ namespace JadeFlix
             MediaScrapers = new MediaScrapers();
             Web = new Web();
             FileDownloader = new DownloadManager();
-            LocalScraper = new Services.Scrapers.LocalScraper();
+            LocalScraper = new LocalScraper();
         }
     }
 }

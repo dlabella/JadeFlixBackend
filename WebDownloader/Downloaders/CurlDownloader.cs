@@ -14,12 +14,15 @@ namespace WebDownloader.Downloaders
     {
         private readonly string _curlBin;
         private readonly CurlDownloadInfoParser _curlDownloadInfoParser;
-        public CurlDownloader() : base("Curl")
+        public CurlDownloader(string curlBin) : base(DownloaderId)
         {
-            _curlBin = Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\curl.exe" : @"/usr/bin/curl";
+            _curlBin = curlBin;//Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\curl.exe" : @"/usr/bin/curl";
             _curlDownloadInfoParser = new CurlDownloadInfoParser();
         }
-
+        public static string DownloaderId
+        {
+            get { return "curl"; }
+        }
         public override void Download(
             string id,
             string filePath,

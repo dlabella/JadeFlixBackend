@@ -14,10 +14,14 @@ namespace WebDownloader.Downloaders
     {
         private readonly string _bin;
         private readonly YtDownloadInfoParser _parser;
-        public YtDownloader() : base("youtube-dl")
+        public YtDownloader(string ytDownloaderBin) : base(DownloaderId)
         {
-            _bin = Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\youtube-dl.exe" : @"/usr/local/bin/youtube-dl";
+            _bin = ytDownloaderBin;//Environment.OSVersion.Platform == PlatformID.Win32NT ? @"C:\usr\bin\youtube-dl.exe" : @"/usr/local/bin/youtube-dl";
             _parser = new YtDownloadInfoParser();
+        }
+        public static string DownloaderId
+        {
+            get { return "youtube-dl";}
         }
 
         public override void Download(
