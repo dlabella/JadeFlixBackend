@@ -37,15 +37,21 @@ namespace WebDownloader.Downloaders
         {
             var argString = new StringBuilder();
             AddNewLineToCommand(argString);
+            AddNoCheckCertificateToCommand(argString);
             AddCookiesToCommand(argString, Cookies);
             AddOutputFileToCommand(argString, OutputFile);
             AddUrlToCommand(argString, Url);
+            
             return argString.ToString();
         }
 
         private void AddNewLineToCommand(StringBuilder sb)
         {
             sb.Append(" --newline ");
+        }
+        private void AddNoCheckCertificateToCommand(StringBuilder sb)
+        {
+            sb.Append(" --no-check-certificate ");
         }
         private void AddUrlToCommand(StringBuilder sb, Uri url)
         {

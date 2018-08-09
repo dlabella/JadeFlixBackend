@@ -30,7 +30,7 @@ namespace SimpleWebApiServer
             }
             Cache = new HttpListenerRequestCache(_urlPrefix);
 
-            string prefix = "http://" + ip + ":" + port + "/";
+            var prefix = "http://" + ip + ":" + port + "/";
 
             Logger.Debug("Listening on: " + prefix);
 
@@ -59,6 +59,7 @@ namespace SimpleWebApiServer
 
         private async Task<string> HandleRequest(HttpListenerRequest request)
         {
+            var url =request.RawUrl;
             foreach (var requestHandler in _requestHandlers.Where(x => x.HttpMethod.Contains(request.HttpMethod)))
             {
                 var path = JoinUrlPath(_urlPrefix, requestHandler.UrlPattern);
@@ -123,7 +124,7 @@ namespace SimpleWebApiServer
             }
             catch (Exception ex)
             {
-                Logger.Debug("Can't get post data!, ex:" + ex.Message);
+                Logger.Exception("Can't get post data!, ex:" + ex.Message, ex);
                 data = string.Empty;
             }
             return data;
@@ -166,8 +167,12 @@ namespace SimpleWebApiServer
                 {
                     foreach (var ex in agex.InnerExceptions)
                     {
-                        Logger.Exception("EXCEPTION: " + ex.Message);
+                        Logger.Exception("EXCEPTION: " + ex.Message, ex);
                     }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Exception("EXCEPTION: " + ex.Message, ex);
                 }
                 finally
                 {

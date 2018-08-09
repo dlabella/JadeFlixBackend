@@ -8,7 +8,8 @@ namespace SimpleWebApiServer
         {
             Code = code;
         }
-        public int Code { get; }
+
+        private int Code { get; }
         public abstract string GetResponse(HttpListenerRequest request, RequestParameters parameters);
     }
 }

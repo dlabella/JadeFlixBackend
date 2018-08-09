@@ -49,7 +49,7 @@ namespace WebDownloader.Downloaders
         }
         private void AddOutputFileToCommand(StringBuilder sb, string filePath)
         {
-            sb.Append(" -o \"")
+            sb.Append(" -o --insecure \"")
               .Append(filePath)
               .Append("\" ");
         }
