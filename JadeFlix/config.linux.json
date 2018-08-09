@@ -2,5 +2,9 @@
   "FilesCachePath": "/nas/hd1/jadeflix/cache",
   "WwwCachePath": "/jadeflix/cache",
   "MediaPath": "/nas/hd1/jadeflix/media",
-  "WwwMediaPath": "/jadeflix/media"
+  "WwwMediaPath": "/jadeflix/media",
+  "Downloaders":{
+    "youtube-dl": "/usr/bin/curl",
+    "curl": "/usr/bin/curl"
+  }
 }

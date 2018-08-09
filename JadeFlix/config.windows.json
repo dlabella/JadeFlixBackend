@@ -2,5 +2,9 @@
   "FilesCachePath": "X:\\jadeflix\\cache",
   "WwwCachePath": "/jadeflix/cache",
   "MediaPath": "X:\\jadeflix\\media",
-  "WwwMediaPath": "/jadeflix/media"
+  "WwwMediaPath": "/jadeflix/media",
+  "Downloaders":{
+    "youtube-dl": "C:\\usr\\bin\\youtube-dl.exe",
+    "curl": "C:\\usr\\bin\\curl.exe"
+  }
 }

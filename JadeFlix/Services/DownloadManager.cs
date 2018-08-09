@@ -11,7 +11,6 @@ using WebDownloader.Downloaders;
 using Common;
 using System.Linq;
 
-//Reviewed: pending config for max parellel downloads
 namespace JadeFlix.Services
 {
     public class DownloadManager
@@ -23,7 +22,8 @@ namespace JadeFlix.Services
 
         public DownloadManager()
         {
-            _downloader = new YtDownloader();
+            var bin = AppContext.Config.Downloaders[YtDownloader.DownloaderId];
+            _downloader = new YtDownloader(bin);
         }
 
         public void Enqueue(string id, string filePath, Uri url, CookieContainer cookieContainer = null, bool forceDownload = false, bool disableTracking = false)

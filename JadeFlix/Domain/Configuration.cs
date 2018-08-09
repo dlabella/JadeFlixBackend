@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace JadeFlix.Domain
@@ -18,6 +19,7 @@ namespace JadeFlix.Domain
         public string MediaPath { get; set; }
         // ReSharper disable once MemberCanBePrivate.Global
         public string WwwMediaPath { get; set; }
+        public IDictionary<string,string> Downloaders { get;set;}
         [JsonIgnore]
         public string VideoFilePattern = "*.mp4|*.mkv|*.avi|*.divx|*.flv";
 
@@ -27,6 +29,7 @@ namespace JadeFlix.Domain
             WwwCachePath = "/";
             MediaPath = "C:\\tmp";
             WwwMediaPath = "/";
+            Downloaders=new Dictionary<string,string>();
         }
         public static Configuration Load()
         {
